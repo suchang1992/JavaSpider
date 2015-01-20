@@ -24,7 +24,12 @@ public class Spider {
         //第一步 访问了 www.zhihu.com/people/uid
         String[] IDandName = getUserUrlName(UID);//返回 uid + name 并为id赋值 [2]为html
         if (IDandName[0] != null && !IDandName[2].equals("404")) {
-            user = getManyCount(user, IDandName);//先简单分析得到数量 准备线程所需数据
+            try {
+                user = getManyCount(user, IDandName);//先简单分析得到数量 准备线程所需数据
+            }catch (NullPointerException e){
+                System.out.print("->error " + UID);
+                return "error";
+            }
             //分析需要开启的线程数量
             int[] array =  getThreadCount(user);//0:question 1:answer 2:话题 3:专栏 4:Follower 5:Followee
             int count = (array[0]+array[1])+3;
@@ -161,12 +166,14 @@ public class Spider {
             return -1;
         } catch (IndexOutOfBoundsException e){
             e.printStackTrace();
+            System.out.println("->error "+UID);
             IDandName[0] = null;
             IDandName[1] = null;
             IDandName[2] = "404";
             return -1;
         } catch (NullPointerException e){
             e.printStackTrace();
+            System.out.println("->error "+UID);
             IDandName[0] = null;
             IDandName[1] = null;
             IDandName[2] = "404";
