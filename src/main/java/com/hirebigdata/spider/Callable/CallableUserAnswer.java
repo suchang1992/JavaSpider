@@ -96,7 +96,6 @@ public class CallableUserAnswer implements Callable {
             System.out.println("->"+answer.getAnswer_id());
             return -1;
         }
-
     }
 
     private String getIntVoteFromString(String vote) {
