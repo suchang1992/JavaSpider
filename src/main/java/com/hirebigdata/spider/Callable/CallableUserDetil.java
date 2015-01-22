@@ -77,6 +77,9 @@ public class CallableUserDetil implements Callable {
             if (e != null){
                 zhihuUserDetil.setDescription(e.getElementsByAttributeValue("class","content").first().text());
             }
+            e = page.getElementsByAttributeValue("class","zm-profile-header-user-weibo").first();
+            if(e != null)
+                zhihuUserDetil.setWeibo_url(e.attr("href"));
             Elements els = page.getElementsByAttributeValue("class","zm-profile-module-desc");
             Elements es = els.first().getElementsByTag("strong");
             zhihuUserDetil.setVote_count(es.first().text());

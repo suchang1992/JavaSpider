@@ -22,7 +22,7 @@ public class Main {
             if(ret.equals("success")){
                 new Mongo().finishCrawl(DBname, "zhihu_user_data_ids", uid);//完成爬取
             }else{
-//                new Mongo().errorCrawl(DBname, "zhihu_user_data_ids", uid);//错误爬取
+                new Mongo().errorCrawl(DBname, "zhihu_user_data_ids", uid);//错误爬取
             }
             System.out.println("->finish "+ret+" "+f.format(new Date()));
             count++;
