@@ -196,6 +196,8 @@ public class Mongo {
 	}
 	public String getUserid(String DBName, String tableName){
 		BasicDBObject cond = new BasicDBObject("fetched",false);
+		BasicDBObject co = new BasicDBObject("$lt",50);
+		cond.append("crawled_count",co);
 		return (String)getColl(DBName, tableName).findOne(cond).get("user_data_id");
 	}
 	public static void main(String[] args) {
