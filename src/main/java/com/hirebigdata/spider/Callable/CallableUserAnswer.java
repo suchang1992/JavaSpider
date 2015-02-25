@@ -52,6 +52,7 @@ public class CallableUserAnswer implements Callable {
             int flag = getAnswerDetil(answer);
             int i = 0;
             while( flag == -1 && i++ < 5){
+                Thread.sleep(500);
                 flag = getAnswerDetil(answer);
             }
 //            new Mongo().pushUserAnswer(User_data_id, answer);//单个返回
