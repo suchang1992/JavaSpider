@@ -45,13 +45,13 @@ public class Spider {
                 pool.submit(new CallableUserFollower(user.getUser_data_id(),user.getUrl_name()));
             if(array[5]>=1)
                 pool.submit(new CallableUserFollowee(user.getUser_data_id(),user.getUrl_name()));
-            FutureTask<ZhihuUserQuestion>[] quesionTasks = new FutureTask[array[0]+1];
-            if(array[0]>=1){
-                for(int i=1 ;i<=array[0];i++){
-                    quesionTasks[i] = new FutureTask<ZhihuUserQuestion>(new CallableUserQuestion(user.getUser_data_id(),user.getUrl_name(),i));
-                    pool.submit(quesionTasks[i]);
-                }
-            }
+//            FutureTask<ZhihuUserQuestion>[] quesionTasks = new FutureTask[array[0]+1];
+//            if(array[0]>=1){
+//                for(int i=1 ;i<=array[0];i++){
+//                    quesionTasks[i] = new FutureTask<ZhihuUserQuestion>(new CallableUserQuestion(user.getUser_data_id(),user.getUrl_name(),i));
+//                    pool.submit(quesionTasks[i]);
+//                }
+//            }
             FutureTask<ZhihuUserAnswer>[] answerTasks = new FutureTask[array[1]+1];
             if(array[1]>=1){
                 for(int i=1 ;i<=array[1];i++){
@@ -63,13 +63,13 @@ public class Spider {
 //                while (!pool.isTerminated()) {
 //                    pool.awaitTermination(1, TimeUnit.SECONDS);
 //                }
-                ZhihuUserQuestion zhihuUserQuestion = new ZhihuUserQuestion();
-                if(array[0]>=1) {
-                    for (int i = 1; i <= array[0]; i++) {
-                        zhihuUserQuestion.getQuestions().addAll(quesionTasks[i].get().getQuestions());
-                    }
-                    new Mongo().upsertUserQuestion(user.getUser_data_id(), zhihuUserQuestion);
-                }
+//                ZhihuUserQuestion zhihuUserQuestion = new ZhihuUserQuestion();
+//                if(array[0]>=1) {
+//                    for (int i = 1; i <= array[0]; i++) {
+//                        zhihuUserQuestion.getQuestions().addAll(quesionTasks[i].get().getQuestions());
+//                    }
+//                    new Mongo().upsertUserQuestion(user.getUser_data_id(), zhihuUserQuestion);
+//                }
                 ZhihuUserAnswer zhihuUserAnswer = new ZhihuUserAnswer();
                 if(array[1]>=1) {
                     for (int i = 1 ; i <= array[1] ; i++){
