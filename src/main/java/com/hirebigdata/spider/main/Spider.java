@@ -204,7 +204,7 @@ public class Spider {
         header.put("Accept-Language", "	zh-cn,zh;q=0.8,en-us;q=0.5,en;q=0.3");
         header.put(
                 "cookie",
-                "   q_c1=ccfd92e359e54617a0ff06a03ca42b92|1421637754000|1421637754000; z_c0=\"QUFDQWdQcEdBQUFYQUFBQVlRSlZUWG9GNUZRRlRoVk9JcjVkLXFBRWVJakdqTTUydUlhYWRnPT0=|1421637754|0ba1acefabd2db982d5be8996970d005128bb7b5\"; _xsrf=f3ac2e80dd818aa786427b5b0f777b38; __utma=51854390.879657291.1421637754.1421637754.1421637754.1; __utmb=51854390.3.10.1421637754; __utmc=51854390; __utmz=51854390.1421637754.1.1.utmcsr=zhihu.com|utmccn=(referral)|utmcmd=referral|utmcct=/; __utmv=51854390.100--|2=registration_date=20150104=1^3=entry_date=20150104=1; __utmt=1");
+                "   q_c1=ccfd92e359e54617a0ff06a03ca42b92|1424831386000|1421637754000; z_c0=\"QUFDQWdQcEdBQUFYQUFBQVlRSlZUWnJBRkZXTm1SRUJMWmR3XzFjQWhnX0hEUm1aa3BTUy1nPT0=|1424831386|be41d0428da17a2cb899a1c4a7e60d9cdbc7d985\"; _xsrf=3968f17621eeb31ce6ac15848765bf99; __utma=51854390.879657291.1421637754.1421637754.1424831367.2; __utmb=51854390.5.10.1424831367; __utmc=51854390; __utmz=51854390.1421637754.1.1.utmcsr=zhihu.com|utmccn=(referral)|utmcmd=referral|utmcct=/; __utmv=51854390.100--|2=registration_date=20150104=1^3=entry_date=20150104=1; __utmt=1");
         header.put("User-Agent",
                 "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0");
         // header.put("X-Requested-With", "XMLHttpRequest");
