@@ -44,11 +44,11 @@ public class CallableUserQuestion implements Callable {
             //vote 修改为进入问题后再爬取
 //            question.setView_count(e.getElementsByAttributeValue("class", "zm-profile-vote-num").text().trim());
             question.setQuestion_id(e.getElementsByAttributeValue("class", "question_link").first().attr("href").trim());
-            question.setTitle(e.getElementsByAttributeValue("class", "question_link").first().text().trim());
+            question.setQuestion_title(e.getElementsByAttributeValue("class", "question_link").first().text().trim());
             Element element = e.getElementsByAttributeValue("class", "meta zg-gray").first();
             String[] str = element.text().split(" • ");
-            question.setAnswer_count(str[1]);
-            question.setFollower_count(str[2]);
+            question.setQuestion_answer_count(str[1]);
+            question.setQuestion_follower_count(str[2]);
             int flag = getQuestionDetil(question, User_data_id);
             int i = 0;
             while (flag == -1 && i++ < 5) {
@@ -70,7 +70,7 @@ public class CallableUserQuestion implements Callable {
                     question.getTags().add(el.text());
                 }
                 element = questionpage.getElementsByAttributeValue("class", "zg-gray-normal").get(2);
-                question.setView_count(element.getElementsByTag("strong").get(0).text());
+                question.setQuestion_view_count(element.getElementsByTag("strong").get(0).text());
                 return 0;
             } else {
 //            System.out.println(question.getQuestion_id()+" "+questionhtml);
