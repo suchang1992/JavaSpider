@@ -17,7 +17,12 @@ public class Mongo {
 	private static MongoClient mongoClient;
 	private static Logger log = Logger.getLogger(Mongo.class);
 	private static DB db;
-	static final String mongoDBname = "scrapy2";
+	public static final String mongoDBname = "scrapy";
+
+	public static String getMongoDBname() {
+		return mongoDBname;
+	}
+
 	static {
 		try {
 			// File file = new File("./config.txt");
@@ -27,7 +32,7 @@ public class Mongo {
 			// String serverip = new String(b);
 			// mongoClient = new MongoClient(new ServerAddress(serverip.trim(),
 			// 27017));
-			mongoClient = new MongoClient(new ServerAddress("127.0.0.1", 27017));
+			mongoClient = new MongoClient(new ServerAddress("121.48.175.146", 27017));
 			mongoClient.setWriteConcern(WriteConcern.SAFE);
 		} catch (UnknownHostException e) {
 			log.info("get mongo instance failed");
