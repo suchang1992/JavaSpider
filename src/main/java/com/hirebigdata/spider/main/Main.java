@@ -12,13 +12,14 @@ import java.util.Date;
 public class Main {
     static String DBname;
     static int count = 1;
-
+    static int restart_count = 0;
     public static void fun(){
         DBname = "scrapy2";
         Format f = new SimpleDateFormat("yyyy-MM-dd:HH:mm:ss");
         String uid = "";
         String ret = "";
         System.out.println("start");
+
         try {
             while (true) {
                 uid = new Mongo().getUserid(DBname, "zhihu_user_data_ids");
@@ -35,7 +36,10 @@ public class Main {
             }
         }catch (Exception e){
             e.printStackTrace();
-            fun();
+            restart_count++;
+            if (restart_count<50)
+                fun();
+            return;
         }
     }
 
