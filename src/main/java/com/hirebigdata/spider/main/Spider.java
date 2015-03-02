@@ -4,6 +4,7 @@ import com.hirebigdata.spider.Callable.*;
 import com.hirebigdata.spider.pojo.*;
 import com.hirebigdata.spider.utils.*;
 import com.mongodb.BasicDBObject;
+import com.mongodb.MongoException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,7 +20,7 @@ import java.util.concurrent.*;
 public class Spider {
     private static Map<String, String> header = new HashMap<String, String>();
 
-    public String spiderContent(String UID) {
+    public String spiderContent(String UID) throws MongoException{
         ZhihuUser user = new ZhihuUser();
         //第一步 访问了 www.zhihu.com/people/uid
         String[] IDandName = getUserUrlName(UID);//返回 uid + name 并为id赋值 [2]为html
