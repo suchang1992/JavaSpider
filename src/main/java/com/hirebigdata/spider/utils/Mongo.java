@@ -49,6 +49,7 @@ public class Mongo {
 	public DB getDB(String DBName) {
 		if (db == null) {
 			db = mongoClient.getDB(DBName);
+			db.authenticate("sc","123456".toCharArray());
 		}
 		return db;
 	}
