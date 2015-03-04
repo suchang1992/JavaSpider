@@ -17,7 +17,7 @@ public class Mongo {
 	private static MongoClient mongoClient;
 	private static Logger log = Logger.getLogger(Mongo.class);
 	private static DB db;
-	public static final String mongoDBname = "scrapy";
+	public static final String mongoDBname = "scrapy2";
 
 	public static String getMongoDBname() {
 		return mongoDBname;
