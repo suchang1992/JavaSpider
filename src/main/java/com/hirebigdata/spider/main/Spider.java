@@ -56,7 +56,7 @@ public class Spider {
             FutureTask<ZhihuUserAnswer>[] answerTasks = new FutureTask[array[1]+1];
             if(array[1]>=1){
                 for(int i=1 ;i<=array[1];i++){
-                    answerTasks[i] = new FutureTask<ZhihuUserAnswer>(new CallableUserAnswer(user.getUser_data_id(),user.getUrl_name(),i));
+                    answerTasks[i] = new FutureTask<ZhihuUserAnswer>(new CallableUserAnswerV2(user.getUser_data_id(),user.getUrl_name(),i));
                     pool.submit(answerTasks[i]);
                 }
             }

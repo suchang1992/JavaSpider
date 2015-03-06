@@ -32,7 +32,7 @@ public class Mongo {
 			// String serverip = new String(b);
 			// mongoClient = new MongoClient(new ServerAddress(serverip.trim(),
 			// 27017));
-			mongoClient = new MongoClient(new ServerAddress("121.48.175.146", 27017));
+			mongoClient = new MongoClient(new ServerAddress("218.244.136.252", 27017));
 			mongoClient.setWriteConcern(WriteConcern.SAFE);
 		} catch (UnknownHostException e) {
 			log.info("get mongo instance failed");
@@ -201,6 +201,13 @@ public class Mongo {
 		cond.append("crawled_count",co);
 		return (String)getColl(DBName, tableName).findOne(cond).get("user_data_id");
 	}
+
+	public DBObject FindInQuestion(String answer_id){
+		String question_id =answer_id.split("/answer")[0];
+		BasicDBObject cond = new BasicDBObject("id",question_id);
+		return getColl(mongoDBname, "questions").findOne(cond);
+	}
+
 	public static void main(String[] args) {
 
 	}

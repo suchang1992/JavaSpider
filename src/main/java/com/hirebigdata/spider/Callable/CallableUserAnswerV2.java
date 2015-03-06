@@ -19,6 +19,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.Callable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Administrator on 2015/1/13.
@@ -50,6 +52,7 @@ public class CallableUserAnswerV2 implements Callable {
             answer.setAnswer_id(e.getElementsByAttributeValue("class", "question_link").attr("href"));
             answer.setAnswer_title(e.getElementsByAttributeValue("class", "question_link").text());
             answer.setAnswer_vote_up(getIntVoteFromString(e.getElementsByAttributeValue("class", "zm-item-vote-count").attr("data-votecount")));
+            answer.setAnswer_time(getTime(e.getElementsByAttributeValue("class", "content hidden").text()));
             int flag = getAnswerDetil(answer);
             int i = 0;
             while( flag == -1 && i++ < 5){
@@ -113,9 +116,18 @@ public class CallableUserAnswerV2 implements Callable {
         return ""+v;
     }
     public String getTime(String time) {
+        String dataPattern3 = "(\\d{4}|[\\u7f16][\\u8f91][\\u4e8e]|[\\u53d1][\\u5e03][\\u4e8e])( |-)(\\d{2}|[\\u6628][\\u5929])(:|-| )(\\d{2})(:|)(\\d{2}|)";
+        Pattern pattern = Pattern.compile(dataPattern3);
+        Matcher match = pattern.matcher(time);
+        match.find();
+        String t = match.group();
+        while (match.find()) {
+            t = match.group();
+        }
         Format f = new SimpleDateFormat("yyyy-MM-dd");
-        if(time.indexOf(":") > 0)
-            time = f.format(new Date());
-        return time;
+        if(t.indexOf(":") > 0)
+            t = f.format(new Date());
+//        System.out.println(t);
+        return t;
     }
 }
