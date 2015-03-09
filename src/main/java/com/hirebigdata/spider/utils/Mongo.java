@@ -32,7 +32,8 @@ public class Mongo {
 			// String serverip = new String(b);
 			// mongoClient = new MongoClient(new ServerAddress(serverip.trim(),
 			// 27017));
-			mongoClient = new MongoClient(new ServerAddress("218.244.136.252", 27017));
+//			mongoClient = new MongoClient(new ServerAddress("218.244.136.252", 27017));
+			mongoClient = new MongoClient(new ServerAddress("127.0.0.1", 27017));
 			mongoClient.setWriteConcern(WriteConcern.SAFE);
 		} catch (UnknownHostException e) {
 			log.info("get mongo instance failed");
@@ -103,7 +104,12 @@ public class Mongo {
 			getColl(mongoDBname,"user_profile").update(query,updateSetValue,true,false);
 			System.out.print("->Question");
 	}
-
+	public void upsertQuestion_Cache(Question_Cache question_cache){
+		BasicDBObject query = new BasicDBObject("id",question_cache.getId());
+		DBObject updateSetValue=new BasicDBObject("$set",JSONObject.toJSON(question_cache));
+		getColl(mongoDBname,"questions").update(query,updateSetValue,true,false);
+		System.out.print("->AddNewQuetions");
+	}
 	public void upsertUserFollower(String User_data_id,ZhihuUserFollower zhihuUserFollower) {
 			BasicDBObject query = new BasicDBObject("user_data_id",User_data_id);
 			DBObject updateSetValue=new BasicDBObject("$set",JSONObject.toJSON(zhihuUserFollower));
@@ -202,11 +208,11 @@ public class Mongo {
 		return (String)getColl(DBName, tableName).findOne(cond).get("user_data_id");
 	}
 
-	public DBObject FindInQuestion(String answer_id){
-		String question_id =answer_id.split("/answer")[0];
+	public DBObject FindInQuestion(String question_id){
 		BasicDBObject cond = new BasicDBObject("id",question_id);
 		return getColl(mongoDBname, "questions").findOne(cond);
 	}
+
 
 	public static void main(String[] args) {
 
