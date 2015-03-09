@@ -116,18 +116,26 @@ public class CallableUserAnswerV2 implements Callable {
         return ""+v;
     }
     public String getTime(String time) {
-        String dataPattern3 = "(\\d{4}|[\\u7f16][\\u8f91][\\u4e8e]|[\\u53d1][\\u5e03][\\u4e8e])( |-)(\\d{2}|[\\u6628][\\u5929])(:|-| )(\\d{2})(:|)(\\d{2}|)";
-        Pattern pattern = Pattern.compile(dataPattern3);
-        Matcher match = pattern.matcher(time);
-        match.find();
-        String t = match.group();
-        while (match.find()) {
-            t = match.group();
-        }
-        Format f = new SimpleDateFormat("yyyy-MM-dd");
-        if(t.indexOf(":") > 0)
-            t = f.format(new Date());
+        if (time.equals(""))
+            return "";
+        try {
+            String dataPattern3 = "(\\d{4}|[\\u7f16][\\u8f91][\\u4e8e]|[\\u53d1][\\u5e03][\\u4e8e])( |-)(\\d{2}|[\\u6628][\\u5929])(:|-| )(\\d{2})(:|)(\\d{2}|)";
+            Pattern pattern = Pattern.compile(dataPattern3);
+            Matcher match = pattern.matcher(time);
+            match.find();
+            String t = match.group();
+            while (match.find()) {
+                t = match.group();
+            }
+            Format f = new SimpleDateFormat("yyyy-MM-dd");
+            if(t.indexOf(":") > 0)
+                t = f.format(new Date());
 //        System.out.println(t);
-        return t;
+            return t;
+        }catch (IllegalStateException e){
+            e.printStackTrace();
+            System.out.println("time:"+time);
+            return "";
+        }
     }
 }
