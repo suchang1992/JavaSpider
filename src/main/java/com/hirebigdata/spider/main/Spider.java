@@ -128,7 +128,10 @@ public class Spider {
         zhihuUser.setFollower_count(e.parent().getElementsByTag("strong").first().text());
         e = els.get(2);
         zhihuUser.setPersonal_page_view_count(e.getElementsByTag("strong").first().text());
-        zhihuUser.setUser__xsrf_value(page.getElementsByAttributeValue("name","_xsrf").first().attr("value"));
+        zhihuUser.setUser__xsrf_value(page.getElementsByAttributeValue("name", "_xsrf").first().attr("value"));
+        e = page.getElementsByAttributeValue("class","zm-profile-header-img zg-avatar-big zm-avatar-editor-preview").first();
+        if(e != null)
+            zhihuUser.setAvatar(e.attr("src"));
         new Mongo().upsertUser(zhihuUser);
         return zhihuUser;
     }

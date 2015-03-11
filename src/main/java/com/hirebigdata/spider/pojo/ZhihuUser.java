@@ -38,6 +38,7 @@ public class ZhihuUser {
     String personal_page_view_count = "0";//class:zm-profile-side-section
     String follow_columns_count = "0 个专栏";//class:zm-profile-side-section
     String follow_topics_count = "0 个话题";//class:zm-profile-side-section
+    String avatar = "";//第一个页面class:zm-profile-header-avatar-container
 
     ArrayList<Column> columns = new ArrayList<Column>();
     ArrayList<Topic> topics = new ArrayList<Topic>();
@@ -318,5 +319,13 @@ public class ZhihuUser {
 
     public void setSkilled_topics(ArrayList<Skilled_topic> skilled_topics) {
         this.skilled_topics = skilled_topics;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 }
