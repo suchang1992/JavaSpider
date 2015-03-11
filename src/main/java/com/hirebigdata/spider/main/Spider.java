@@ -43,9 +43,9 @@ public class Spider {
             if(array[3]>=1)
                 pool.submit(new CallableUserColumn(user.getUser_data_id(), user.getUrl_name()));
             if(array[4]>=1)
-                pool.submit(new CallableUserFollower(user.getUser_data_id(),user.getUrl_name()));
+                pool.submit(new CallableUserFollower(user.getUser_data_id(),user.getUrl_name(),user.getUser__xsrf_value()));
             if(array[5]>=1)
-                pool.submit(new CallableUserFollowee(user.getUser_data_id(),user.getUrl_name()));
+                pool.submit(new CallableUserFollowee(user.getUser_data_id(),user.getUrl_name(),user.getUser__xsrf_value()));
 //            FutureTask<ZhihuUserQuestion>[] quesionTasks = new FutureTask[array[0]+1];
 //            if(array[0]>=1){
 //                for(int i=1 ;i<=array[0];i++){
