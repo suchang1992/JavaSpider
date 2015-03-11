@@ -14,7 +14,7 @@ public class TestAuthMongo {
     public static void main(String[] args) {
         MongoClient mongoClientFrom = null;
         try {
-            mongoClientFrom = new MongoClient(new ServerAddress("192.168.2.147", 27017));
+            mongoClientFrom = new MongoClient(new ServerAddress("121.48.175.146", 27017));
             DB db = mongoClientFrom.getDB("scrapy2");
             db.authenticate("sc","123456".toCharArray());
             DBObject user_profile = db.getCollection("user_profile").findOne();
