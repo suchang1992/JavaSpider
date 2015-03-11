@@ -41,7 +41,6 @@ public class CallableUserFollowee implements Callable{
         String count = e.parent().getElementsByTag("strong").first().text();
         Integer countInt = Integer.parseInt(count);
         Integer offsetInt = 20;
-        int check = 0;
         while (countInt > 20 && offsetInt < (countInt+21)){
             String offset = Integer.toString(offsetInt);
             HashMap<String, String> params = new HashMap<String, String>();
@@ -53,7 +52,6 @@ public class CallableUserFollowee implements Callable{
             JSONObject jsonObj = new JSONObject(moreUser);
             JSONArray msg = jsonObj.getJSONArray("msg");
             for (int i=0; i<msg.length(); i++){
-                check++;
                 String f = (String)msg.get(i);
                 Document followee = Jsoup.parse(f);
                 String dataId = followee.getElementsByAttributeValue("data-follow","m:button").attr("data-id");

@@ -5,6 +5,8 @@ import com.hirebigdata.spider.pojo.ZhihuUser;
 import com.hirebigdata.spider.pojo.ZhihuUserFollower;
 import com.hirebigdata.spider.utils.HttpUtil;
 import com.hirebigdata.spider.utils.Mongo;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -37,6 +39,28 @@ public class CallableUserFollower implements Callable {
         Elements els = page.getElementById("zh-profile-follows-list").getElementsByAttributeValue("data-follow","m:button");
         for(Element e: els){
             zhihuUserFollower.getFollowers().add(e.attr("data-id"));
+        }
+        Element e = page.getElementsByAttributeValue("href", "/people/" + User_Url_name + "/followers").first();
+        String count = e.getElementsByTag("strong").first().text();
+        Integer countInt = Integer.parseInt(count);
+        Integer offsetInt = 20;
+        while (countInt > 20 && offsetInt < (countInt+21)){
+            String offset = Integer.toString(offsetInt);
+            HashMap<String, String> params = new HashMap<String, String>();
+            params.put("method", "next");
+            params.put("params", "{\"offset\":" + offset + ",\"order_by\":\"created\",\"hash_id\":\"a4ca7a2400c67cd0e7a026c81183a8a5\"}");
+            params.put("_xsrf", "3968f17621eeb31ce6ac15848765bf99");
+            String moreUser = new HttpUtil().post("http://www.zhihu.com/node/ProfileFollowersListV2",
+                    params, Spider.getHeader());
+            JSONObject jsonObj = new JSONObject(moreUser);
+            JSONArray msg = jsonObj.getJSONArray("msg");
+            for (int i=0; i<msg.length(); i++){
+                String f = (String)msg.get(i);
+                Document followee = Jsoup.parse(f);
+                String dataId = followee.getElementsByAttributeValue("data-follow","m:button").attr("data-id");
+                zhihuUserFollower.getFollowers().add(dataId);
+            }
+            offsetInt += 20;
         }
         new Mongo().upsertUserFollower(User_data_id,zhihuUserFollower);
         return zhihuUserFollower;
