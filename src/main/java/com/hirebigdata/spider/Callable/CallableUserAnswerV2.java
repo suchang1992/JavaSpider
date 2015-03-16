@@ -52,6 +52,7 @@ public class CallableUserAnswerV2 implements Callable {
             Answer answer = new Answer();
             answer.setAnswer_id(e.getElementsByAttributeValue("class", "question_link").attr("href"));
             answer.setAnswer_title(e.getElementsByAttributeValue("class", "question_link").text());
+            answer.setAnswer_bio(e.getElementsByAttributeValue("class","zu-question-my-bio").first().attr("title"));
             answer.setAnswer_vote_up(getIntVoteFromString(e.getElementsByAttributeValue("class", "zm-item-vote-count").attr("data-votecount")));
             answer.setAnswer_content(e.getElementsByAttributeValue("class", "content hidden").text());
             answer.setAnswer_time(getTime(answer.getAnswer_content()));
