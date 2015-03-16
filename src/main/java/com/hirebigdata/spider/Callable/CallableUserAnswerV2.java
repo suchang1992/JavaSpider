@@ -94,6 +94,7 @@ public class CallableUserAnswerV2 implements Callable {
                 answer.getAnswer_tags().clear();
                 return -1;
             }
+            //新quesion抓取
             el = page.getElementsByAttributeValue("class", "zm-item-title zm-editable-content").first().getElementsByTag("a").first();
             if (el != null)
                 question_cache.setTitle(el.text());
