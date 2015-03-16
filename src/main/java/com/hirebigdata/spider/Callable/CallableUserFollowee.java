@@ -39,33 +39,33 @@ public class CallableUserFollowee implements Callable {
         for (Element e : els) {
             zhihuUserFollowee.getFollowees().add(e.attr("data-id"));
         }
-        Element e = page.getElementsByAttributeValue("href", "/people/" + User_Url_name + "/followees").first();
-        String count = e.parent().getElementsByTag("strong").first().text();
-        Integer countInt = Integer.parseInt(count);
-        Integer offsetInt = 20;
-        try {
-            while (countInt > 20 && offsetInt < (countInt + 21)) {
-                String offset = Integer.toString(offsetInt);
-                HashMap<String, String> params = new HashMap<String, String>();
-                params.put("method", "next");
-                params.put("params", "{\"offset\":" + offset + ",\"order_by\":\"created\",\"hash_id\":\"\" + User_data_id + \"\"}");
-                params.put("_xsrf", _xsrf);
-                String moreUser = new HttpUtil().post("http://www.zhihu.com/node/ProfileFolloweesListV2",
-                        params, Spider.getHeader());
-                JSONObject jsonObj = new JSONObject(moreUser);
-                JSONArray msg = jsonObj.getJSONArray("msg");
-                for (int i = 0; i < msg.length(); i++) {
-                    String f = (String) msg.get(i);
-                    Document followee = Jsoup.parse(f);
-                    String dataId = followee.getElementsByAttributeValue("data-follow", "m:button").attr("data-id");
-                    System.out.println(dataId);
-                    zhihuUserFollowee.getFollowees().add(dataId);
-                }
-                offsetInt += 20;
-            }
-        } catch (Exception ee) {
-            //
-        }
+//        Element e = page.getElementsByAttributeValue("href", "/people/" + User_Url_name + "/followees").first();
+//        String count = e.parent().getElementsByTag("strong").first().text();
+//        Integer countInt = Integer.parseInt(count);
+//        Integer offsetInt = 20;
+//        try {
+//            while (countInt > 20 && offsetInt < (countInt + 21)) {
+//                String offset = Integer.toString(offsetInt);
+//                HashMap<String, String> params = new HashMap<String, String>();
+//                params.put("method", "next");
+//                params.put("params", "{\"offset\":" + offset + ",\"order_by\":\"created\",\"hash_id\":\"\" + User_data_id + \"\"}");
+//                params.put("_xsrf", _xsrf);
+//                String moreUser = new HttpUtil().post("http://www.zhihu.com/node/ProfileFolloweesListV2",
+//                        params, Spider.getHeader());
+//                JSONObject jsonObj = new JSONObject(moreUser);
+//                JSONArray msg = jsonObj.getJSONArray("msg");
+//                for (int i = 0; i < msg.length(); i++) {
+//                    String f = (String) msg.get(i);
+//                    Document followee = Jsoup.parse(f);
+//                    String dataId = followee.getElementsByAttributeValue("data-follow", "m:button").attr("data-id");
+//                    System.out.println(dataId);
+//                    zhihuUserFollowee.getFollowees().add(dataId);
+//                }
+//                offsetInt += 20;
+//            }
+//        } catch (Exception ee) {
+//            //
+//        }
         new Mongo().upsertUserFollowee(User_data_id, zhihuUserFollowee);
         return zhihuUserFollowee;
     }
