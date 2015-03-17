@@ -43,13 +43,13 @@ public class Spider {
             if(array[3]>=1)
                 pool.submit(new CallableUserColumn(user.getUser_data_id(), user.getUrl_name()));
             int f_count = Integer.parseInt(user.getFollower_count());
-            int c = f_count/20 + 1;
-            System.out.println(c);
+            int c = f_count/20 + 1;//followers的页数
+//            System.out.println(c);
             FutureTask<ZhihuUserFollower>[] followersTasks = new FutureTask[c];
             if(array[4]>=1){
                 for (int i=0; i<c; i++){
                     int offset = i*20 > f_count ? f_count : i*20;
-                    System.out.println(offset);
+//                    System.out.println(offset);
                     followersTasks[i] = new FutureTask<ZhihuUserFollower>(new CallableUserFollower(
                             user.getUser_data_id(),
                             user.getUrl_name(),
