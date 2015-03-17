@@ -18,7 +18,7 @@ public class Mongo {
 	private static Logger log = Logger.getLogger(Mongo.class);
 	private static DB db;
 	public static final String mongoDBname = "scrapy2";
-
+	static int crawled_count_min = 0;
 	public static String getMongoDBname() {
 		return mongoDBname;
 	}
@@ -32,7 +32,7 @@ public class Mongo {
 			// String serverip = new String(b);
 			// mongoClient = new MongoClient(new ServerAddress(serverip.trim(),
 			// 27017));
-			mongoClient = new MongoClient(new ServerAddress("218.244.136.252", 81));
+			mongoClient = new MongoClient(new ServerAddress("192.168.2.222", 27017));
 //			mongoClient = new MongoClient(new ServerAddress("127.0.0.1", 27017));
 			mongoClient.setWriteConcern(WriteConcern.SAFE);
 		} catch (UnknownHostException e) {
@@ -157,8 +157,7 @@ public class Mongo {
 
 	public boolean startCrawl(String DBName, String tableName,String user_data_id){
 		BasicDBObject cond = new BasicDBObject("user_data_id",user_data_id);
-		BasicDBObject setValue = new BasicDBObject("$set",new BasicDBObject("fetched",true))
-				.append("$inc", new BasicDBObject("crawled_count", 1));
+		BasicDBObject setValue = new BasicDBObject("$set",new BasicDBObject("fetched",true));
 		getDB(DBName).getCollection(tableName).update(cond,setValue,true,true);
 		return true;
 	}
@@ -202,10 +201,16 @@ public class Mongo {
 		return result;
 	}
 	public String getUserid(String DBName, String tableName){
-		BasicDBObject cond = new BasicDBObject("fetched",false);
-		BasicDBObject co = new BasicDBObject("$lt",50);
+		BasicDBObject cond = new BasicDBObject();
+		BasicDBObject co = new BasicDBObject("$lt",crawled_count_min);
 		cond.append("crawled_count",co);
-		return (String)getColl(DBName, tableName).findOne(cond).get("user_data_id");
+		DBObject object = getColl(DBName, tableName).findOne(cond);
+		try {
+			return (String) object.get("user_data_id");
+		} catch (NullPointerException e){
+			crawled_count_min++;
+			return getUserid(DBName,tableName);
+		}
 	}
 
 	public DBObject FindInQuestion(String question_id){
