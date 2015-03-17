@@ -32,7 +32,7 @@ public class Mongo {
 			// String serverip = new String(b);
 			// mongoClient = new MongoClient(new ServerAddress(serverip.trim(),
 			// 27017));
-			mongoClient = new MongoClient(new ServerAddress("218.244.136.252", 27017));
+			mongoClient = new MongoClient(new ServerAddress("218.244.136.252", 81));
 //			mongoClient = new MongoClient(new ServerAddress("127.0.0.1", 27017));
 			mongoClient.setWriteConcern(WriteConcern.SAFE);
 		} catch (UnknownHostException e) {
