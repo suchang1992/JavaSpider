@@ -87,18 +87,20 @@ public class Spider {
 //                    }
 //                    new Mongo().upsertUserQuestion(user.getUser_data_id(), zhihuUserQuestion);
 //                }
-                ZhihuUserAnswer zhihuUserAnswer = new ZhihuUserAnswer();
                 if(array[1]>=1) {
+                    ZhihuUserAnswer zhihuUserAnswer = new ZhihuUserAnswer();
                     for (int i = 1 ; i <= array[1] ; i++){
                         zhihuUserAnswer.getAnswers().addAll(answerTasks[i].get().getAnswers());
                     }
                     new Mongo().upsertUserAnswer(user.getUser_data_id(), zhihuUserAnswer);
                 }
-                ZhihuUserFollower zhihuUserFollower = new ZhihuUserFollower();
-                for (int i=0; i<c; i++){
-                    zhihuUserFollower.getFollowers().addAll(followersTasks[i].get().getFollowers());
+                if(array[4]>=1){
+                    ZhihuUserFollower zhihuUserFollower = new ZhihuUserFollower();
+                    for (int i=0; i<c; i++){
+                        zhihuUserFollower.getFollowers().addAll(followersTasks[i].get().getFollowers());
+                    }
+                    new Mongo().upsertUserFollower(user.getUser_data_id(), zhihuUserFollower);
                 }
-                new Mongo().upsertUserFollower(user.getUser_data_id(), zhihuUserFollower);
                 pool.shutdown();
                 return "success";
             }
