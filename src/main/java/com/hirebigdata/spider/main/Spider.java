@@ -42,8 +42,24 @@ public class Spider {
                 pool.submit(new CallableUserTopic(user.getUser_data_id(), user.getUrl_name()));
             if(array[3]>=1)
                 pool.submit(new CallableUserColumn(user.getUser_data_id(), user.getUrl_name()));
-            if(array[4]>=1)
-                pool.submit(new CallableUserFollower(user.getUser_data_id(),user.getUrl_name(),user.getUser__xsrf_value()));
+            int f_count = Integer.parseInt(user.getFollower_count());
+            int c = f_count/20 + 1;
+            System.out.println(c);
+            FutureTask<ZhihuUserFollower>[] followersTasks = new FutureTask[c];
+            if(array[4]>=1){
+                for (int i=0; i<c; i++){
+                    int offset = i*20 > f_count ? f_count : i*20;
+                    System.out.println(offset);
+                    followersTasks[i] = new FutureTask<ZhihuUserFollower>(new CallableUserFollower(
+                            user.getUser_data_id(),
+                            user.getUrl_name(),
+                            user.getUser__xsrf_value(),
+                            offset
+                    ));
+                    pool.submit(followersTasks[i]);
+                }
+            }
+            user.getFollowee_count();
             if(array[5]>=1)
                 pool.submit(new CallableUserFollowee(user.getUser_data_id(),user.getUrl_name(),user.getUser__xsrf_value()));
 //            FutureTask<ZhihuUserQuestion>[] quesionTasks = new FutureTask[array[0]+1];
@@ -78,6 +94,11 @@ public class Spider {
                     }
                     new Mongo().upsertUserAnswer(user.getUser_data_id(), zhihuUserAnswer);
                 }
+                ZhihuUserFollower zhihuUserFollower = new ZhihuUserFollower();
+                for (int i=0; i<c; i++){
+                    zhihuUserFollower.getFollowers().addAll(followersTasks[i].get().getFollowers());
+                }
+                new Mongo().upsertUserFollower(user.getUser_data_id(), zhihuUserFollower);
                 pool.shutdown();
                 return "success";
             }
