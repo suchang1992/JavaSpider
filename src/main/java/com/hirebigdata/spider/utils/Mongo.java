@@ -157,13 +157,15 @@ public class Mongo {
 
 	public boolean startCrawl(String DBName, String tableName,String user_data_id){
 		BasicDBObject cond = new BasicDBObject("user_data_id",user_data_id);
-		BasicDBObject setValue = new BasicDBObject("$set",new BasicDBObject("fetched",true));
+		BasicDBObject setValue = new BasicDBObject("$set",new BasicDBObject("fetched",true))
+				.append("$inc", new BasicDBObject("crawled_count", 1));
 		getDB(DBName).getCollection(tableName).update(cond,setValue,true,true);
 		return true;
 	}
 	public boolean errorCrawl(String DBName, String tableName,String user_data_id){
 		BasicDBObject cond = new BasicDBObject("user_data_id",user_data_id);
-		BasicDBObject setValue = new BasicDBObject("$set",new BasicDBObject("fetched",false));
+		BasicDBObject setValue = new BasicDBObject("$set",new BasicDBObject("fetched",true))
+				.append("$inc", new BasicDBObject("crawled_count", -1));
 		getDB(DBName).getCollection(tableName).update(cond,setValue,true,true);
 		return true;
 	}
