@@ -49,7 +49,7 @@ public class CallableUserColumn implements Callable{
                 Column column = new Column();
                 column.setUrl(e.getElementsByAttributeValue("class", "zm-list-avatar-link").first().attr("href"));
                 column.setName(e.getElementsByAttributeValue("class", "zm-profile-section-main").first().getElementsByAttributeValue("href", column.getUrl()).first().text());
-                column.setDescription(e.getElementsByAttributeValue("class", "description").html());
+                column.setDescription(e.getElementsByAttributeValue("class", "description").text());
                 column.setMeta(e.getElementsByAttributeValue("class", "meta").text());
     //            new Mongo().pushUserColumn(User_data_id, column);
                 zhihuUserColumn.getColumns().add(column);

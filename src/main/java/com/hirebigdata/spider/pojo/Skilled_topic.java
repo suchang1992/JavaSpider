@@ -4,10 +4,10 @@ package com.hirebigdata.spider.pojo;
  * Created by Administrator on 2015/1/9.
  */
 public class Skilled_topic {
-    String url;
-    String vote;
-    String name;
-    String comment;
+    String url = "";
+    String vote = "";
+    String name = "";
+    String comment = "";
 
     public String getUrl() {
         return url;

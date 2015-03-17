@@ -6,13 +6,13 @@ import java.util.ArrayList;
  * Created by Administrator on 2015/1/9.
  */
 public class Answer {
-    String answer_title;
-    String answer_time;
-    String answer_vote_up;
-    String answer_bio;
-    String answer_content;
+    String answer_title = "";
+    String answer_time = "";
+    String answer_vote_up = "";
+    String answer_bio = "";
+    String answer_content = "";
     ArrayList<String> answer_tags = new ArrayList<String>();
-    String answer_id;
+    String answer_id = "";
 
     public Answer() {
     }

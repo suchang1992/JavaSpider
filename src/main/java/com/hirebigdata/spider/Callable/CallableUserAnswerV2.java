@@ -52,8 +52,10 @@ public class CallableUserAnswerV2 implements Callable {
             Answer answer = new Answer();
             answer.setAnswer_id(e.getElementsByAttributeValue("class", "question_link").attr("href"));
             answer.setAnswer_title(e.getElementsByAttributeValue("class", "question_link").text());
+            answer.setAnswer_bio(e.getElementsByAttributeValue("class","zu-question-my-bio").first().attr("title"));
             answer.setAnswer_vote_up(getIntVoteFromString(e.getElementsByAttributeValue("class", "zm-item-vote-count").attr("data-votecount")));
-            answer.setAnswer_time(getTime(e.getElementsByAttributeValue("class", "content hidden").text()));
+            answer.setAnswer_content(e.getElementsByAttributeValue("class", "content hidden").text());
+            answer.setAnswer_time(getTime(answer.getAnswer_content()));
             int flag = getAnswerDetil(answer);
             int i = 0;
             while( flag == -1 && i++ < 5){
@@ -92,6 +94,7 @@ public class CallableUserAnswerV2 implements Callable {
                 answer.getAnswer_tags().clear();
                 return -1;
             }
+            //新quesion抓取
             el = page.getElementsByAttributeValue("class", "zm-item-title zm-editable-content").first().getElementsByTag("a").first();
             if (el != null)
                 question_cache.setTitle(el.text());

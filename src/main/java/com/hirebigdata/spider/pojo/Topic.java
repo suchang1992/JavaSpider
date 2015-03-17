@@ -6,10 +6,10 @@ import java.io.Serializable;
  * Created by Administrator on 2015/1/9.
  */
 public class Topic {
-    String url;
-    String content;
-    String answers_count; //???
-    String name;
+    String url = "";
+    String content = "";
+    String answers_count = ""; //???
+    String name = "";
 
     public String getUrl() {
         return url;
