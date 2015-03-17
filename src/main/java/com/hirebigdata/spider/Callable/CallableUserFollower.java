@@ -27,34 +27,39 @@ public class CallableUserFollower implements Callable {
     String User_data_id;
     String User_Url_name;
     String _xsrf;
+    int offset;
 
-    public CallableUserFollower(String user_data_id, String user_Url_name, String _xsrf) {
+    public CallableUserFollower(String user_data_id, String user_Url_name, String _xsrf, int offset) {
         User_data_id = user_data_id;
         User_Url_name = user_Url_name;
         this._xsrf = _xsrf;
+        this.offset = offset;
     }
 
     public ZhihuUserFollower call() throws Exception {
-        String html = new HttpUtil().get("http://www.zhihu.com/people/"
-                + User_Url_name + "/followers", Spider.getHeader());
-        Document page = Jsoup.parse(html);
-        Elements els = page.getElementById("zh-profile-follows-list").getElementsByAttributeValue("data-follow", "m:button");
-        for (Element e : els) {
-            zhihuUserFollower.getFollowers().add(e.attr("data-id"));
-        }
-        Element e = page.getElementsByAttributeValue("href", "/people/" + User_Url_name + "/followers").first();
-        String count = e.getElementsByTag("strong").first().text();
-        Integer countInt = Integer.parseInt(count);
-        Integer offsetInt = 20;
-        try {
-            while (countInt > 20 && offsetInt < (countInt + 21)) {
-                String offset = Integer.toString(offsetInt);
+        if (offset == 0){
+            String html = new HttpUtil().get("http://www.zhihu.com/people/"
+                    + User_Url_name + "/followers", Spider.getHeader());
+            Document page = Jsoup.parse(html);
+            Elements els = page.getElementById("zh-profile-follows-list").getElementsByAttributeValue("data-follow", "m:button");
+            for (Element e : els) {
+                zhihuUserFollower.getFollowers().add(e.attr("data-id"));
+            }
+        }else{
+            try {
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put("method", "next");
                 params.put("params", "{\"offset\":" + offset + ",\"order_by\":\"created\",\"hash_id\":\"" + User_data_id + "\"}");
                 params.put("_xsrf", _xsrf);
                 String moreUser = new HttpUtil().post("http://www.zhihu.com/node/ProfileFollowersListV2",
                         params, Spider.getHeader());
+                //429 Too Many Requests
+                int maxTryCount = 5;
+                while ((moreUser.length() < 5) && ((maxTryCount--) > 0)) {
+                    Thread.sleep(1000);
+                    moreUser = new HttpUtil().post("http://www.zhihu.com/node/ProfileFollowersListV2",
+                            params, Spider.getHeader());
+                }
                 JSONObject jsonObj = new JSONObject(moreUser);
                 JSONArray msg = jsonObj.getJSONArray("msg");
                 for (int i = 0; i < msg.length(); i++) {
@@ -63,12 +68,11 @@ public class CallableUserFollower implements Callable {
                     String dataId = followee.getElementsByAttributeValue("data-follow", "m:button").attr("data-id");
                     zhihuUserFollower.getFollowers().add(dataId);
                 }
-                offsetInt += 20;
+            } catch (Exception ee) {
+                System.out.println(offset);
+                ee.printStackTrace();
             }
-        } catch (Exception ee) {
-            //
         }
-        new Mongo().upsertUserFollower(User_data_id, zhihuUserFollower);
         return zhihuUserFollower;
 
 //        Map<String, String> data = new HashMap<String, String>();
