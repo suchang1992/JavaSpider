@@ -32,7 +32,7 @@ import java.util.Set;
 @SuppressWarnings("deprecation")
 public class HttpUtil {
 
-	private static Logger log = Logger.getLogger(IOUtil.class);
+//	private static Logger log = Logger.getLogger(IOUtil.class);
 
 	public static String readKeywords(String bufferPath) {
 		String result = "";
@@ -164,7 +164,7 @@ public class HttpUtil {
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 		String body = null;
 
-		log.info("create httppost:" + url);
+//		log.info("create httppost:" + url);
 		HttpPost post = postForm(url, params);
 
 		for (String name : header.keySet()) {
@@ -183,7 +183,7 @@ public class HttpUtil {
 			throws ClientProtocolException, IOException {
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 		String body = null;
-		log.info("create httppost:" + url);
+//		log.info("create httppost:" + url);
 		HttpPost post = postForm(url, params);
 
 		for (String name : header.keySet()) {
@@ -201,7 +201,7 @@ public class HttpUtil {
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 		String body = null;
 
-		log.info("create httppost:" + url);
+//		log.info("create httppost:" + url);
 		HttpPost post = postForm(url, JSONparams);
 
 		for (String name : header.keySet()) {
@@ -221,7 +221,7 @@ public class HttpUtil {
 		String body = null;
 		httpclient.getParams().setParameter(
 				CoreConnectionPNames.CONNECTION_TIMEOUT, 10000);
-		log.info("create httppost:" + url);
+//		log.info("create httppost:" + url);
 		HttpGet get = new HttpGet(url);
 		if (header != null)
 			for (String name : header.keySet()) {
@@ -238,7 +238,7 @@ public class HttpUtil {
 		String body = null;
 		httpclient.getParams().setParameter(
 				CoreConnectionPNames.CONNECTION_TIMEOUT, 10000);
-		log.info("create httppost:" + url);
+//		log.info("create httppost:" + url);
 		try{
 			HttpGet get = new HttpGet(url);
 			if (header != null)
@@ -311,20 +311,20 @@ public class HttpUtil {
 
 	private static String paseResponse(HttpResponse response)
 			throws UnsupportedEncodingException, ParseException, IOException {
-		log.info("get response from http server..");
+//		log.info("get response from http server..");
 		HttpEntity entity = response.getEntity();
 
-		log.info("response status: " + response.getStatusLine());
+//		log.info("response status: " + response.getStatusLine());
 		String charset = EntityUtils.getContentCharSet(entity);
 
-		log.info(charset);
+//		log.info(charset);
 		String body = EntityUtils.toString(entity);
 		return body;
 	}
 
 	private static HttpResponse sendRequest(DecompressingHttpClient httpclient,
 			HttpUriRequest httpost) throws ClientProtocolException, IOException {
-		log.info("execute post...");
+//		log.info("execute post...");
 		HttpResponse response = null;
 
 		response = httpclient.execute(httpost);
@@ -342,7 +342,7 @@ public class HttpUtil {
 		for (String key : keySet) {
 			nvps.add(new BasicNameValuePair(key, params.get(key)));
 		}
-		log.info("set utf-8 form entity to httppost");
+//		log.info("set utf-8 form entity to httppost");
 		httpost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
 
 		return httpost;

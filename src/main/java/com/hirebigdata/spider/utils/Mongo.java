@@ -32,7 +32,7 @@ public class Mongo {
 			// String serverip = new String(b);
 			// mongoClient = new MongoClient(new ServerAddress(serverip.trim(),
 			// 27017));
-			mongoClient = new MongoClient(new ServerAddress("192.168.2.222", 27017));
+			mongoClient = new MongoClient(new ServerAddress("218.244.136.200", 27017));
 //			mongoClient = new MongoClient(new ServerAddress("127.0.0.1", 27017));
 			mongoClient.setWriteConcern(WriteConcern.SAFE);
 		} catch (UnknownHostException e) {
@@ -170,22 +170,22 @@ public class Mongo {
 		return true;
 	}
 	public boolean finishCrawl(String DBName, String tableName,String user_data_id){
-		Format f = new SimpleDateFormat("yyyy-MM-dd:HH:mm:ss");
+		long time = System.currentTimeMillis();
 		BasicDBObject cond = new BasicDBObject("user_data_id",user_data_id);
 		BasicDBObject value = new BasicDBObject("crawled_successfully",true)
-				.append("last_crawled_time", f.format(new Date()));
+				.append("last_crawled_time", time);
 		BasicDBObject setValue = new BasicDBObject("$set",value).append("$inc",new BasicDBObject("crawled_count",1));
 		getDB(DBName).getCollection(tableName).update(cond,setValue,true,true);
 		return true;
 	}
 	public void insertUserID(String DBName, String tableName,String user_data_id){
-		Format f = new SimpleDateFormat("yyyy-MM-dd:HH:mm:ss");
 		BasicDBObject cond = new BasicDBObject("user_data_id",user_data_id);
 		DBObject object = getDB(DBName).getCollection(tableName).findOne(cond);
+		long time = 0;
 		if(object == null) {
 			BasicDBObject obj = new BasicDBObject("user_data_id",user_data_id)
 					.append("crawled_successfully", false).append("fetched", false)
-					.append("last_crawled_time", f.format(new Date()))
+					.append("last_crawled_time", time)
 					.append("crawled_count", 0);
 			new Mongo().getColl(DBName,tableName).save(obj);
 		}
@@ -213,6 +213,12 @@ public class Mongo {
 			crawled_count_min++;
 			return getUserid(DBName,tableName);
 		}
+	}
+
+	public String getUseridOnlyZero(String DBName, String tableName) throws NullPointerException{
+		BasicDBObject cond = new BasicDBObject("crawled_count",0);
+		DBObject object = getColl(DBName, tableName).findOne(cond);
+		return (String) object.get("user_data_id");
 	}
 
 	public DBObject FindInQuestion(String question_id){

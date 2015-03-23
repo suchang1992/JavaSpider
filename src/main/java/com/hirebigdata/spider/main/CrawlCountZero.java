@@ -38,6 +38,7 @@ public class CrawlCountZero {
         } catch (NullPointerException e){
             try {
                 Thread.sleep(1000*60*60);
+                System.out.println("sleep 1小时 后继续");
             } catch (InterruptedException e1) {
                 fun();
             }
