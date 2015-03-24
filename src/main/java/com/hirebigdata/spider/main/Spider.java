@@ -44,6 +44,7 @@ public class Spider {
                 pool.submit(new CallableUserColumn(user.getUser_data_id(), user.getUrl_name()));
             int f_count = Integer.parseInt(user.getFollower_count());
             int c = f_count/20 + 1;//followers的页数
+            c = c > 30000 ? 30000 : c;
 //            System.out.println(c);
             FutureTask<ZhihuUserFollower>[] followersTasks = new FutureTask[c];
             if(array[4]>=1){
