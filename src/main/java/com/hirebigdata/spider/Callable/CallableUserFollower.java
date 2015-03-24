@@ -54,9 +54,9 @@ public class CallableUserFollower implements Callable {
                 String moreUser = new HttpUtil().post("http://www.zhihu.com/node/ProfileFollowersListV2",
                         params, Spider.getHeader());
                 //429 Too Many Requests
-                int maxTryCount = 5;
+                int maxTryCount = 10;
                 while ((moreUser.length() < 5) && ((maxTryCount--) > 0)) {
-                    Thread.sleep(1000);
+                    Thread.sleep((10 - maxTryCount) * 1000);
                     moreUser = new HttpUtil().post("http://www.zhihu.com/node/ProfileFollowersListV2",
                             params, Spider.getHeader());
                 }
