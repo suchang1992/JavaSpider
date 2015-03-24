@@ -18,7 +18,7 @@ public class Mongo {
 	private static Logger log = Logger.getLogger(Mongo.class);
 	private static DB db;
 	public static final String mongoDBname = "scrapy2";
-	static int crawled_count_min = 0;
+	static int crawled_count_min = 1;
 	public static String getMongoDBname() {
 		return mongoDBname;
 	}
@@ -156,16 +156,20 @@ public class Mongo {
 	}
 
 	public boolean startCrawl(String DBName, String tableName,String user_data_id){
+		long time = System.currentTimeMillis();
 		BasicDBObject cond = new BasicDBObject("user_data_id",user_data_id);
 		BasicDBObject setValue = new BasicDBObject("$set",new BasicDBObject("fetched",true))
-				.append("$inc", new BasicDBObject("crawled_count", 1));
+				.append("$inc", new BasicDBObject("crawled_count", 1))
+				.append("last_crawled_time", time);
 		getDB(DBName).getCollection(tableName).update(cond,setValue,true,true);
 		return true;
 	}
 	public boolean errorCrawl(String DBName, String tableName,String user_data_id){
+		long time = System.currentTimeMillis();
 		BasicDBObject cond = new BasicDBObject("user_data_id",user_data_id);
 		BasicDBObject setValue = new BasicDBObject("$set",new BasicDBObject("fetched",true))
-				.append("$inc", new BasicDBObject("crawled_count", -1));
+				.append("$inc", new BasicDBObject("crawled_count", 2))
+				.append("last_crawled_time", time);
 		getDB(DBName).getCollection(tableName).update(cond,setValue,true,true);
 		return true;
 	}
@@ -214,9 +218,13 @@ public class Mongo {
 			return getUserid(DBName,tableName);
 		}
 	}
-
-	public String getUseridOnlyZero(String DBName, String tableName) throws NullPointerException{
+	public String getUseridByTime(String DBName, String tableName) throws NullPointerException{
 		BasicDBObject cond = new BasicDBObject("crawled_count",0);
+		DBObject object = getColl(DBName, tableName).findOne(cond);
+		return (String) object.get("user_data_id");
+	}
+	public String getUseridOnlyZero(String DBName, String tableName) throws NullPointerException{
+		BasicDBObject cond = new BasicDBObject("last_crawled_time",0);
 		DBObject object = getColl(DBName, tableName).findOne(cond);
 		return (String) object.get("user_data_id");
 	}

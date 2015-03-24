@@ -74,7 +74,7 @@ public class CallableUserFollower implements Callable {
                 }
             } catch (Exception ee) {
                 System.out.println(offset);
-                ee.printStackTrace();
+//                ee.printStackTrace();
             }
         }
         return zhihuUserFollower;
