@@ -160,7 +160,7 @@ public class Mongo {
 		BasicDBObject cond = new BasicDBObject("user_data_id",user_data_id);
 		BasicDBObject setValue = new BasicDBObject("$set",new BasicDBObject("fetched",true))
 				.append("$inc", new BasicDBObject("crawled_count", 1))
-				.append("last_crawled_time", time);
+				.append("$set",new BasicDBObject("last_crawled_time", time));
 		getDB(DBName).getCollection(tableName).update(cond,setValue,true,true);
 		return true;
 	}
@@ -169,7 +169,7 @@ public class Mongo {
 		BasicDBObject cond = new BasicDBObject("user_data_id",user_data_id);
 		BasicDBObject setValue = new BasicDBObject("$set",new BasicDBObject("fetched",true))
 				.append("$inc", new BasicDBObject("crawled_count", 2))
-				.append("last_crawled_time", time);
+				.append("$set",new BasicDBObject("last_crawled_time", time));
 		getDB(DBName).getCollection(tableName).update(cond,setValue,true,true);
 		return true;
 	}
@@ -177,7 +177,7 @@ public class Mongo {
 		long time = System.currentTimeMillis();
 		BasicDBObject cond = new BasicDBObject("user_data_id",user_data_id);
 		BasicDBObject value = new BasicDBObject("crawled_successfully",true)
-				.append("last_crawled_time", time);
+				.append("$set",new BasicDBObject("last_crawled_time", time));
 		BasicDBObject setValue = new BasicDBObject("$set",value).append("$inc",new BasicDBObject("crawled_count",1));
 		getDB(DBName).getCollection(tableName).update(cond,setValue,true,true);
 		return true;
