@@ -57,9 +57,10 @@ public class CallableUserAnswerV2 implements Callable {
                 answer.setAnswer_bio(element.attr("title"));
             answer.setAnswer_vote_up(getIntVoteFromString(e.getElementsByAttributeValue("class", "zm-item-vote-count").attr("data-votecount")));
             element = e.getElementsByAttributeValue("class", "content hidden").first();
-            if (element != null)
+            if (element != null) {
                 answer.setAnswer_content(element.text());
                 answer.setAnswer_time(getTime(element.text()));
+            }
             int flag = getAnswerDetil(answer);
             int i = 0;
             while( flag == -1 && i++ < 5){

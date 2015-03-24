@@ -38,12 +38,16 @@ public class CallableUserFollower implements Callable {
 
     public ZhihuUserFollower call() throws Exception {
         if (offset == 0){
-            String html = new HttpUtil().get("http://www.zhihu.com/people/"
-                    + User_Url_name + "/followers", Spider.getHeader());
-            Document page = Jsoup.parse(html);
-            Elements els = page.getElementById("zh-profile-follows-list").getElementsByAttributeValue("data-follow", "m:button");
-            for (Element e : els) {
-                zhihuUserFollower.getFollowers().add(e.attr("data-id"));
+            try {
+                String html = new HttpUtil().get("http://www.zhihu.com/people/"
+                        + User_Url_name + "/followers", Spider.getHeader());
+                Document page = Jsoup.parse(html);
+                Elements els = page.getElementById("zh-profile-follows-list").getElementsByAttributeValue("data-follow", "m:button");
+                for (Element e : els) {
+                    zhihuUserFollower.getFollowers().add(e.attr("data-id"));
+                }
+            }catch (NullPointerException exc){
+                //
             }
         }else{
             try {
