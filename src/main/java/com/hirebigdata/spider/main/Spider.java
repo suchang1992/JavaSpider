@@ -77,6 +77,7 @@ public class Spider {
                     pool.submit(answerTasks[i]);
                 }
             }
+            pool.shutdown();
             try {
 //                while (!pool.isTerminated()) {
 //                    pool.awaitTermination(1, TimeUnit.SECONDS);
@@ -91,28 +92,31 @@ public class Spider {
                 if(array[1]>=1) {
                     ZhihuUserAnswer zhihuUserAnswer = new ZhihuUserAnswer();
                     for (int i = 1 ; i <= array[1] ; i++){
-                        zhihuUserAnswer.getAnswers().addAll(answerTasks[i].get().getAnswers());
+                        try {
+                            zhihuUserAnswer.getAnswers().addAll(answerTasks[i].get().getAnswers());
+                        } catch (InterruptedException e) {
+                            continue;
+                        }
                     }
                     new Mongo().upsertUserAnswer(user.getUser_data_id(), zhihuUserAnswer);
                 }
                 if(array[4]>=1){
                     ZhihuUserFollower zhihuUserFollower = new ZhihuUserFollower();
                     for (int i=0; i<c; i++){
-                        zhihuUserFollower.getFollowers().addAll(followersTasks[i].get().getFollowers());
+                        try {
+                            zhihuUserFollower.getFollowers().addAll(followersTasks[i].get(1,TimeUnit.MINUTES).getFollowers());
+                        } catch (InterruptedException e) {
+                            break;
+                        } catch (TimeoutException e) {
+                            break;
+                        }
                     }
                     new Mongo().upsertUserFollower(user.getUser_data_id(), zhihuUserFollower);
                 }
-                pool.shutdown();
                 return "success";
             }
             catch (ExecutionException e){
                 e.printStackTrace();
-                pool.shutdown();
-                return "error";
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-                pool.shutdown();
                 return "error";
             }
         }else
