@@ -176,9 +176,9 @@ public class Mongo {
 	public boolean finishCrawl(String DBName, String tableName,String user_data_id){
 		long time = System.currentTimeMillis();
 		BasicDBObject cond = new BasicDBObject("user_data_id",user_data_id);
-		BasicDBObject value = new BasicDBObject("crawled_successfully",true)
-				.append("$set",new BasicDBObject("last_crawled_time", time));
-		BasicDBObject setValue = new BasicDBObject("$set",value).append("$inc",new BasicDBObject("crawled_count",1));
+		BasicDBObject setValue = new BasicDBObject("$set",new BasicDBObject("crawled_successfully",true))
+				.append("$inc",new BasicDBObject("crawled_count",1))
+				.append("$set", new BasicDBObject("last_crawled_time", time));
 		getDB(DBName).getCollection(tableName).update(cond,setValue,true,true);
 		return true;
 	}
