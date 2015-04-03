@@ -40,16 +40,19 @@ public class CompanyDetail extends ReflectionDBObject {
     }
 
     public static void main(String[] args) throws Exception{
-        String url = "http://www.lagou.com/gongsi/6296.html";
+        String url = "http://www.lagou.com/gongsi/1575.html";
         String result = Helper.doGet(url);
-        Document doc = Jsoup.parse(result);
+        // Get the company need need seven second
 
+        Document doc = Jsoup.parse(result);
+        Long before = System.currentTimeMillis();
         MongoClient mongoClient = new MongoClient(MongoConfig.MongoDBUrl, MongoConfig.port);
 
         CompanyDetail companyDetail = new CompanyDetail(url);
         companyDetail.startParse(doc);
         Helper.saveToMongoDB(mongoClient, MongoConfig.dbName, MongoConfig.collectionLagouCompanyDetail, companyDetail);
-
+        // From new MongoClient to here need 23 second.(9 positions)
+        System.out.println(System.currentTimeMillis() - before);
     }
 
     public void startParse(Document doc){
@@ -108,7 +111,7 @@ public class CompanyDetail extends ReflectionDBObject {
 
     public void processJobInfo(Element content_left){
         Elements jobs = content_left.select("#jobList li");
-        Element moreJob = content_left.select(".c_section dd .positions_more a").first();
+        Element moreJob = content_left.select(".c_section dd .positions_more").first();
         if (moreJob != null){
             this.getJobList(moreJob.attr("href"));
         }else {
@@ -136,7 +139,8 @@ public class CompanyDetail extends ReflectionDBObject {
     public void getJobList(String jobListLink){
         String jobListIndex = Helper.doGet(jobListLink);
         Document doc = Jsoup.parse(jobListIndex);
-        Integer totalPage = Integer.parseInt(doc.select(".Pagination a").last().attr("title"));
+
+        Integer totalPage = (int)Math.ceil(Integer.parseInt(doc.select(".jobsTotalB i").text()) / 10);
         for (int i=1; i<=totalPage; i++){
             String jobListPage = Helper.doGet(jobListLink + "pageNo=" + String.valueOf(i));
             Document jobsAtPage = Jsoup.parse(jobListPage);
