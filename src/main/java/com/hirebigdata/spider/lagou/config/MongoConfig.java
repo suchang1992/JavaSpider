@@ -9,4 +9,5 @@ public class MongoConfig {
     public static final int port = 27017;
     public static final String dbName = "lagou";
     public static final String collectionLagouCompanyInList = "companyInList";
+    public static final String collectionLagouCompanyDetail = "companyDetail";
 }
