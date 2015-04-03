@@ -142,7 +142,7 @@ public class CompanyDetail extends ReflectionDBObject {
 
         Integer totalPage = (int)Math.ceil(Integer.parseInt(doc.select(".jobsTotalB i").text()) / 10);
         for (int i=1; i<=totalPage; i++){
-            String jobListPage = Helper.doGet(jobListLink + "pageNo=" + String.valueOf(i));
+            String jobListPage = Helper.doGet(jobListLink + "?pageNo=" + String.valueOf(i));
             Document jobsAtPage = Jsoup.parse(jobListPage);
             Elements jobs = jobsAtPage.select("#searchForm li");
             for (Element job : jobs){
