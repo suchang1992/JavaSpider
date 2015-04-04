@@ -15,6 +15,8 @@ import java.nio.charset.Charset;
  */
 public class Helper {
 
+    static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(Helper.class);
+
     public static void main(String[] args){
     }
 
@@ -28,6 +30,7 @@ public class Helper {
 
             return true;
         }catch (Exception e){
+            log.error(e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -40,6 +43,7 @@ public class Helper {
             HttpResponse response = client.execute(request);
             return getHtml(response);
         } catch (Exception e) {
+            log.error(e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -56,6 +60,7 @@ public class Helper {
                 result.append(line);
             }
         } catch (Exception e) {
+            log.error(e.getMessage());
             e.printStackTrace();
         }
         return result.toString();
@@ -76,12 +81,14 @@ public class Helper {
             }
             return result.toString();
         } catch (IOException e) {
+            log.error(e.getMessage());
             e.printStackTrace();
         } finally {
             try {
                 if (fis != null)
                     fis.close();
             } catch (IOException ex) {
+                log.error(ex.getMessage());
                 ex.printStackTrace();
             }
         }
@@ -104,6 +111,7 @@ public class Helper {
             fop.flush();
             fop.close();
         } catch (IOException e) {
+            log.error(e.getMessage());
             e.printStackTrace();
         } finally {
             try {
@@ -111,6 +119,7 @@ public class Helper {
                     fop.close();
                 }
             } catch (IOException e) {
+                log.error(e.getMessage());
                 e.printStackTrace();
             }
         }
