@@ -18,6 +18,7 @@ import java.util.List;
  * Date: 2015/4/3
  */
 public class CompanyDetail extends ReflectionDBObject {
+    static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(CompanyDetail.class);
     String url = "";
     String title = "";
     String fullname = "";
@@ -40,9 +41,12 @@ public class CompanyDetail extends ReflectionDBObject {
     }
 
     public static void main(String[] args) throws Exception{
-        String url = "http://www.lagou.com/gongsi/1575.html";
+//        String url = "http://www.lagou.com/gongsi/1575.html";
+//        String url = "http://www.lagou.com/gongsi/451.html";
+//        String url = "http://www.lagou.com/gongsi/250.html";
+//        String url = "http://www.lagou.com/gongsi/6296.html";
+        String url = "http://www.lagou.com/gongsi/1914.html";
         String result = Helper.doGet(url);
-        // Get the company need need seven second
 
         Document doc = Jsoup.parse(result);
         Long before = System.currentTimeMillis();
@@ -51,7 +55,13 @@ public class CompanyDetail extends ReflectionDBObject {
         CompanyDetail companyDetail = new CompanyDetail(url);
         companyDetail.startParse(doc);
         Helper.saveToMongoDB(mongoClient, MongoConfig.dbName, MongoConfig.collectionLagouCompanyDetail, companyDetail);
-        // From new MongoClient to here need 23 second.(9 positions)
+        // From new MongoClient to here need 2 second.(9 positions)
+        // From new MongoClient to here need 165 second.(820 positions)
+        // From new MongoClient to here need 82 second.(440 positions)
+        // From new MongoClient to here need 4 second.(20 positions)
+        // From new MongoClient to here need 35 second.(200 positions)
+        // on average, crawl 5 positions need 1 second
+        // 503,451 positions, totally need 100,000 second, which is 27 hour, which is one day.
         System.out.println(System.currentTimeMillis() - before);
     }
 
@@ -113,7 +123,7 @@ public class CompanyDetail extends ReflectionDBObject {
         Elements jobs = content_left.select("#jobList li");
         Element moreJob = content_left.select(".c_section dd .positions_more").first();
         if (moreJob != null){
-            this.getJobList(moreJob.attr("href"));
+            this.getMoreJobs(moreJob.attr("href"));
         }else {
             for (Element job : jobs){
                 this.getJobDetail(job.select("a").attr("href"));
@@ -122,21 +132,26 @@ public class CompanyDetail extends ReflectionDBObject {
     }
 
     public void getJobDetail(String jobLink){
-        String jobHtml = Helper.doGet(jobLink);
-        Document doc = Jsoup.parse(jobHtml);
-        Job job1 = new Job(jobLink);
-        job1.job_name = doc.select(".content_l .job_detail .join_tc_icon h1").first().attr("title");
-        job1.salary = doc.select(".content_l .job_detail .job_request span").get(0).text();
-        job1.location = doc.select(".content_l .job_detail .job_request span").get(1).text();
-        job1.experiment = doc.select(".content_l .job_detail .job_request span").get(2).text();
-        job1.scholar = doc.select(".content_l .job_detail .job_request span").get(3).text();
-        job1.type = doc.select(".content_l .job_detail .job_request span").get(4).text();
-        job1.publish_date = doc.select("#container > div.clearfix > div.content_l > dl > dd.job_request > div").first().text();
-        job1.jd = doc.select(".content_l .job_bt").text();
-        this.jobList.add(job1);
+        try{
+            String jobHtml = Helper.doGet(jobLink);
+            Document doc = Jsoup.parse(jobHtml);
+            Job job1 = new Job(jobLink);
+            job1.job_name = doc.select(".content_l .job_detail .join_tc_icon h1").attr("title");
+            job1.salary = doc.select(".content_l .job_detail .job_request span").get(0).text();
+            job1.location = doc.select(".content_l .job_detail .job_request span").get(1).text();
+            job1.experiment = doc.select(".content_l .job_detail .job_request span").get(2).text();
+            job1.scholar = doc.select(".content_l .job_detail .job_request span").get(3).text();
+            job1.type = doc.select(".content_l .job_detail .job_request span").get(4).text();
+            job1.publish_date = doc.select("#container > div.clearfix > div.content_l > dl > dd.job_request > div").first().text();
+            job1.jd = doc.select(".content_l .job_bt").text();
+            this.jobList.add(job1);
+        }catch (Exception e){
+            log.error(e.getMessage() + " while processing " + jobLink);
+            e.printStackTrace();
+        }
     }
 
-    public void getJobList(String jobListLink){
+    public void getMoreJobs(String jobListLink){
         String jobListIndex = Helper.doGet(jobListLink);
         Document doc = Jsoup.parse(jobListIndex);
 
