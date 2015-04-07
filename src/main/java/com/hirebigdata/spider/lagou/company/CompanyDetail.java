@@ -41,11 +41,11 @@ public class CompanyDetail extends ReflectionDBObject {
     }
 
     public static void main(String[] args) throws Exception{
-//        String url = "http://www.lagou.com/gongsi/1575.html";
+        String url = "http://www.lagou.com/gongsi/1575.html";
 //        String url = "http://www.lagou.com/gongsi/451.html";
 //        String url = "http://www.lagou.com/gongsi/250.html";
 //        String url = "http://www.lagou.com/gongsi/6296.html";
-        String url = "http://www.lagou.com/gongsi/1914.html";
+//        String url = "http://www.lagou.com/gongsi/1914.html";
         String result = Helper.doGet(url);
 
         Document doc = Jsoup.parse(result);
@@ -155,7 +155,7 @@ public class CompanyDetail extends ReflectionDBObject {
         String jobListIndex = Helper.doGet(jobListLink);
         Document doc = Jsoup.parse(jobListIndex);
 
-        Integer totalPage = (int)Math.ceil(Integer.parseInt(doc.select(".jobsTotalB i").text()) / 10);
+        Integer totalPage = (int)Math.ceil(Double.parseDouble(doc.select(".jobsTotalB i").text()) / 10.0);
         for (int i=1; i<=totalPage; i++){
             String jobListPage = Helper.doGet(jobListLink + "?pageNo=" + String.valueOf(i));
             Document jobsAtPage = Jsoup.parse(jobListPage);
