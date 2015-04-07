@@ -57,7 +57,6 @@ public class Helper {
                     log.error("counter 404 when process " + url);
                     return null;
                 }
-                System.out.println(status_code);
                 return getHtml(response);
             }
             log.error("try too much with " + url + ", final status code is " + status_code);

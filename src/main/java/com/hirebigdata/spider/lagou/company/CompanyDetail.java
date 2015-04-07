@@ -2,6 +2,7 @@ package com.hirebigdata.spider.lagou.company;
 
 import com.hirebigdata.spider.lagou.config.MongoConfig;
 import com.hirebigdata.spider.lagou.utils.Helper;
+import com.hirebigdata.spider.lagou.utils.MyMongoClient;
 import com.mongodb.MongoClient;
 import com.mongodb.ReflectionDBObject;
 import org.jsoup.Jsoup;
@@ -16,6 +17,8 @@ import java.util.List;
 /**
  * User: shellbye.com@gmail.com
  * Date: 2015/4/3
+ * on average, crawl 5 positions need 1 second
+ * 503,451 positions, totally need 100,000 second, which is 27 hour, which is one day.
  */
 public class CompanyDetail extends ReflectionDBObject {
     static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(CompanyDetail.class);
@@ -41,28 +44,27 @@ public class CompanyDetail extends ReflectionDBObject {
     }
 
     public static void main(String[] args) throws Exception{
-        String url = "http://www.lagou.com/gongsi/1575.html";
+//        String url = "http://www.lagou.com/gongsi/1575.html";
 //        String url = "http://www.lagou.com/gongsi/451.html";
 //        String url = "http://www.lagou.com/gongsi/250.html";
-//        String url = "http://www.lagou.com/gongsi/6296.html";
+        String url = "http://www.lagou.com/gongsi/6296.html";
 //        String url = "http://www.lagou.com/gongsi/1914.html";
-        String result = Helper.doGet(url);
-
-        Document doc = Jsoup.parse(result);
-        Long before = System.currentTimeMillis();
-        MongoClient mongoClient = new MongoClient(MongoConfig.MongoDBUrl, MongoConfig.port);
 
         CompanyDetail companyDetail = new CompanyDetail(url);
-        companyDetail.startParse(doc);
-        Helper.saveToMongoDB(mongoClient, MongoConfig.dbName, MongoConfig.collectionLagouCompanyDetail, companyDetail);
-        // From new MongoClient to here need 2 second.(9 positions)
-        // From new MongoClient to here need 165 second.(820 positions)
-        // From new MongoClient to here need 82 second.(440 positions)
-        // From new MongoClient to here need 4 second.(20 positions)
-        // From new MongoClient to here need 35 second.(200 positions)
-        // on average, crawl 5 positions need 1 second
-        // 503,451 positions, totally need 100,000 second, which is 27 hour, which is one day.
-        System.out.println(System.currentTimeMillis() - before);
+        companyDetail.begin();
+    }
+
+    public void begin(){
+        String result = Helper.doGet(this.url);
+        Document doc = Jsoup.parse(result);
+
+        try{
+            this.startParse(doc);
+            Helper.saveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName, MongoConfig.collectionLagouCompanyDetail, this);
+        }catch (Exception ue){
+            log.error(ue.getMessage());
+            ue.printStackTrace();
+        }
     }
 
     public void startParse(Document doc){
