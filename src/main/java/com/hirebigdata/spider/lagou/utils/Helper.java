@@ -16,6 +16,8 @@ import java.nio.charset.Charset;
 public class Helper {
 
     static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(Helper.class);
+    static final int  SLEEP_SECOND_WHEN_COUNTER_500 = 2;
+    static final int MAX_TRY_COUNT_WHEN_COUNTER_500 = 5;
 
     public static void main(String[] args){
     }
@@ -40,8 +42,26 @@ public class Helper {
         HttpClient client = HttpClientBuilder.create().build();
         HttpGet request = new HttpGet(url);
         try {
-            HttpResponse response = client.execute(request);
-            return getHtml(response);
+//            HttpResponse response = client.execute(request);
+            int status_code = -1;
+            int count = 0;
+            while(status_code != 200 && count++ < MAX_TRY_COUNT_WHEN_COUNTER_500){
+                HttpResponse response = client.execute(request);
+                status_code = response.getStatusLine().getStatusCode();
+                if (status_code >= 500){
+                    // server side error, try again after some sleep
+                    Thread.sleep(SLEEP_SECOND_WHEN_COUNTER_500 * 1000);
+                    log.error("try " + url + " the " + count + " time");
+                    continue;
+                }else if (status_code == 404){
+                    log.error("counter 404 when process " + url);
+                    return null;
+                }
+                System.out.println(status_code);
+                return getHtml(response);
+            }
+            log.error("try too much with " + url + ", final status code is " + status_code);
+            return null;
         } catch (Exception e) {
             log.error(e.getMessage());
             e.printStackTrace();
