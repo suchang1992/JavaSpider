@@ -19,4 +19,24 @@ public class MongoClient2 {
         }
         return mongoClient;
     }
+
+    public static void main(String[] args){
+//        Singleton s = new Singleton();
+        Singleton.INSTANCE.m();
+    }
+}
+enum Singleton
+{
+    INSTANCE;
+
+    // instance vars, constructor
+    // Static getter
+    private Singleton getInstance()
+    {
+        return INSTANCE;
+    }
+
+    public void m(){
+
+    }
 }
