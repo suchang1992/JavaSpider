@@ -33,7 +33,7 @@ public class Helper {
 
             DBCursor cursor = collection.find(new BasicDBObject().append(field, value));
 
-            return !cursor.hasNext();
+            return cursor.hasNext();
         } catch (Exception e) {
             log.error(e.getMessage());
             e.printStackTrace();
