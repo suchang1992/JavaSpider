@@ -2,6 +2,7 @@ package com.hirebigdata.spider.lagou.company;
 
 import com.hirebigdata.spider.lagou.config.MongoConfig;
 import com.hirebigdata.spider.lagou.utils.Helper;
+import com.hirebigdata.spider.lagou.utils.MyMongoClient;
 import com.mongodb.MongoClient;
 import com.mongodb.ReflectionDBObject;
 import org.jsoup.Jsoup;
@@ -12,16 +13,23 @@ import org.jsoup.select.Elements;
 /**
  * User: shellbye.com@gmail.com
  * Date: 2015/4/2
+ * need more than one minute
+ * crawled
  */
 public class CompanyInList  extends ReflectionDBObject {
+    static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(CompanyInList.class);
     String category = "";
     String name = "";
     String url = "";
 
     public static void main(String[] args) throws Exception {
+        CompanyInList companyInList = new CompanyInList();
+        companyInList.begin();
+    }
+
+    public void begin(){
         String siteMapUrl = "http://www.lagou.com/sitemap";
         String result = Helper.doGet(siteMapUrl);
-        // Get the siteMap need need six second
 
 //        Helper.storeToDisc(result, "c://siteMap.html");
 //        String result = Helper.readFromFile("c://siteMap.html");
@@ -29,19 +37,26 @@ public class CompanyInList  extends ReflectionDBObject {
         Document doc = Jsoup.parse(result);
 
         Elements firstClass = doc.select(".companyListPage dl");
-        MongoClient mongoClient = new MongoClient(MongoConfig.MongoDBUrl, MongoConfig.port);
-        for (Element f : firstClass) {
-            String category = f.select("dt a").attr("title");
-            Elements companies = f.select("dd");
-            for (Element company : companies) {
-                CompanyInList companyInList = new CompanyInList();
-                companyInList.setCategory(category);
-                companyInList.setName(company.select("a").attr("title"));
-                companyInList.setUrl(company.select("a").attr("href"));
-                Helper.saveToMongoDB(mongoClient, MongoConfig.dbName, MongoConfig.collectionLagouCompanyInList, companyInList);
+        try {
+            for (Element f : firstClass) {
+                String category = f.select("dt a").attr("title");
+                Elements companies = f.select("dd");
+                for (Element company : companies) {
+                    CompanyInList companyInList = new CompanyInList();
+                    companyInList.setCategory(category);
+                    companyInList.setName(company.select("a").attr("title"));
+                    companyInList.setUrl(company.select("a").attr("href"));
+                    if (!Helper.isExistInMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName,
+                            MongoConfig.collectionLagouCompanyInList, "Url", companyInList.url)){
+                        Helper.saveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName,
+                                MongoConfig.collectionLagouCompanyInList, companyInList);
+                    }
+                }
             }
+        }catch (Exception e){
+            log.error(e.getMessage());
+            e.printStackTrace();
         }
-        // From new MongoClient to here need more than one minute
     }
 
     public String getCategory() {

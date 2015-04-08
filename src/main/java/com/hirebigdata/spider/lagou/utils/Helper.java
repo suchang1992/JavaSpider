@@ -1,5 +1,6 @@
 package com.hirebigdata.spider.lagou.utils;
 
+import com.hirebigdata.spider.lagou.config.MongoConfig;
 import com.mongodb.*;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -16,22 +17,40 @@ import java.nio.charset.Charset;
 public class Helper {
 
     static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(Helper.class);
-    static final int  SLEEP_SECOND_WHEN_COUNTER_500 = 2;
+    static final int SLEEP_SECOND_WHEN_COUNTER_500 = 2;
     static final int MAX_TRY_COUNT_WHEN_COUNTER_500 = 5;
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
+//        isExistInMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName, MongoConfig.collectionLagouCompanyDetail,
+//                "Url", "123");
+    }
+
+    public static boolean isExistInMongoDB(MongoClient mongoClient, String dbName,
+                                           String collectionName, String field, String value) {
+        try {
+            DB db = mongoClient.getDB(dbName);
+            DBCollection collection = db.getCollection(collectionName);
+
+            DBCursor cursor = collection.find(new BasicDBObject().append(field, value));
+
+            return !cursor.hasNext();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static boolean saveToMongoDB(MongoClient mongoClient, String dbName,
-                                        String collectionName, ReflectionDBObject object){
-        try{
+                                        String collectionName, ReflectionDBObject object) {
+        try {
             DB db = mongoClient.getDB(dbName);
             DBCollection collection = db.getCollection(collectionName);
 
             collection.insert(object);
 
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error(e.getMessage());
             e.printStackTrace();
             return false;
@@ -45,15 +64,15 @@ public class Helper {
 //            HttpResponse response = client.execute(request);
             int status_code = -1;
             int count = 0;
-            while(status_code != 200 && count++ < MAX_TRY_COUNT_WHEN_COUNTER_500){
+            while (status_code != 200 && count++ < MAX_TRY_COUNT_WHEN_COUNTER_500) {
                 HttpResponse response = client.execute(request);
                 status_code = response.getStatusLine().getStatusCode();
-                if (status_code >= 500){
+                if (status_code >= 500) {
                     // server side error, try again after some sleep
                     Thread.sleep(SLEEP_SECOND_WHEN_COUNTER_500 * 1000);
                     log.error("try " + url + " the " + count + " time");
                     continue;
-                }else if (status_code == 404){
+                } else if (status_code == 404) {
                     log.error("counter 404 when process " + url);
                     return null;
                 }
