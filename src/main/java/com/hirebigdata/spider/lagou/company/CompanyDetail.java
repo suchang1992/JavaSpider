@@ -39,7 +39,7 @@ public class CompanyDetail extends ReflectionDBObject {
     List<Member> members = new ArrayList<>();//http://www.lagou.com/gongsi/250.html
     List<Product> products = new ArrayList<>();//http://www.lagou.com/gongsi/1575.html
 
-    CompanyDetail(String url){
+    public CompanyDetail(String url){
         this.url = url;
     }
 
