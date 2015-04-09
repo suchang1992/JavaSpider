@@ -47,7 +47,7 @@ public class CompanyDetail extends ReflectionDBObject {
 //        String url = "http://www.lagou.com/gongsi/1575.html";
 //        String url = "http://www.lagou.com/gongsi/451.html";
 //        String url = "http://www.lagou.com/gongsi/250.html";
-        String url = "http://www.lagou.com/gongsi/6296.html";
+        String url = "http://www.lagou.com/gongsi/49408.html";
 //        String url = "http://www.lagou.com/gongsi/1914.html";
 
         CompanyDetail companyDetail = new CompanyDetail(url);
@@ -62,13 +62,17 @@ public class CompanyDetail extends ReflectionDBObject {
             this.startParse(doc);
             Helper.saveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName, MongoConfig.collectionLagouCompanyDetail, this);
         }catch (Exception ue){
-            log.error(ue.getMessage());
+            System.out.println(this.url);
+            log.error(ue.getMessage() + " at " + this.url);
             ue.printStackTrace();
         }
     }
 
     public void startParse(Document doc){
         Element content_left = doc.select(".content_l").first();
+        if (content_left == null){
+            return;
+        }
         this.processLeftInfo(content_left);
 
         Element content_right = doc.select(".content_r").first();
@@ -91,9 +95,13 @@ public class CompanyDetail extends ReflectionDBObject {
         this.title = content_left.select(".c_box h2").first().attr("title");
         this.fullname = content_left.select(".c_box h1").first().attr("title");
         this.vali = content_left.select(".c_box .va ").first().text();
-        this.brief = content_left.select(".c_box .oneword").first().text();
+        if (content_left.select(".c_box .oneword").first() != null)
+            this.brief = content_left.select(".c_box .oneword").first().text();
+
         this.labels = Arrays.asList(content_left.select(".c_box #hasLabels").first().select("li").text().split(" "));
-        this.introduction = content_left.select(".c_section .c_intro").first().text();
+        if (content_left.select(".c_section .c_intro").first() != null)
+            this.introduction = content_left.select(".c_section .c_intro").first().text();
+
         this.logo = content_left.select("#logoShow img").first().attr("src");
     }
 
