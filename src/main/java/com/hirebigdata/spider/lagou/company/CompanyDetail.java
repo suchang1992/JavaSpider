@@ -38,21 +38,31 @@ public class CompanyDetail extends ReflectionDBObject {
     List<Member> members = new ArrayList<>();//http://www.lagou.com/gongsi/250.html
     List<Product> products = new ArrayList<>();//http://www.lagou.com/gongsi/1575.html
 
+    static String storeCollection = MongoConfig.collectionLagouCompanyDetailV2;
     boolean existedAlready = false;
     boolean newJobAllGot = false;
     Set<String> oldJobUrls = new HashSet<>();
+    Set<String> oldStages = new HashSet<>();
 
     public CompanyDetail(String url){
         url = url.split("\\?")[0];
         this.existedAlready = Helper.isExistInMongoDB(MyMongoClient.getMongoClient(),
-                MongoConfig.dbName, MongoConfig.collectionLagouCompanyDetail,"Url", url);
+                MongoConfig.dbName, CompanyDetail.storeCollection,"Url", url);
         this.url = url;
         if (this.existedAlready){
             BasicDBList jobs = (BasicDBList)Helper.getDocumentFromMongo(MyMongoClient.getMongoClient(),
-                    MongoConfig.dbName, MongoConfig.collectionLagouCompanyDetail,"Url", url).get("JobList");
+                    MongoConfig.dbName, CompanyDetail.storeCollection,"Url", url).get("JobList");
             for (int i = 0; i<jobs.size(); i++){
                 this.oldJobUrls.add(((BasicDBObject) jobs.get(i)).get("Job_link").toString());
                 this.jobList.add(Job.getJobFromBasicDBObject((BasicDBObject)jobs.get(i)));
+            }
+
+            BasicDBList stages = (BasicDBList)Helper.getDocumentFromMongo(MyMongoClient.getMongoClient(),
+                    MongoConfig.dbName, CompanyDetail.storeCollection,"Url", url).get("Stage");
+            for (int i = 0; i<stages.size(); i++){
+                String s = stages.get(i).toString();
+                this.oldStages.add(s);
+                this.stage.add(s);
             }
         }
     }
@@ -61,7 +71,7 @@ public class CompanyDetail extends ReflectionDBObject {
 //        String url = "http://www.lagou.com/gongsi/1575.html";
 //        String url = "http://www.lagou.com/gongsi/451.html";
 //        String url = "http://www.lagou.com/gongsi/250.html";
-        String url = "http://www.lagou.com/c/28133.html?o=0";
+        String url = "http://www.lagou.com/c/28133.html";
 //        String url = "http://www.lagou.com/gongsi/1914.html";
 
         CompanyDetail companyDetail = new CompanyDetail(url);
@@ -75,7 +85,7 @@ public class CompanyDetail extends ReflectionDBObject {
         try{
             this.startParse(doc);
             Helper.saveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName,
-                    MongoConfig.collectionLagouCompanyDetail, this);
+                    CompanyDetail.storeCollection, this);
         }catch (Exception ue){
             System.out.println(this.url);
             log.error(ue.getMessage() + " at " + this.url);
@@ -101,10 +111,13 @@ public class CompanyDetail extends ReflectionDBObject {
     public void processRightInfo(Element content_right){
         this.location = content_right.select(".c_tags table tbody tr").first().select("td").get(1).text();
         this.field = content_right.select(".c_tags table tbody tr").get(1).select("td").get(1).text();
+
         this.size.add(content_right.select(".c_tags table tbody tr").get(2).select("td").get(1).text());
         this.homepage = content_right.select(".c_tags table tbody tr")
                 .get(3).select("td").get(1).select("a").attr("href");
-        this.stage.add(content_right.select(".c_stages .stageshow .c5").first().text());
+        String stage = content_right.select(".c_stages .stageshow .c5").first().text();
+        if (!this.oldStages.contains(stage))
+            this.stage.add(stage);
     }
 
     public void processLeftInfo(Element content_left){
