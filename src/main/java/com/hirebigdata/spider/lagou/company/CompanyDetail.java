@@ -43,6 +43,7 @@ public class CompanyDetail extends ReflectionDBObject {
     boolean newJobAllGot = false;
     Set<String> oldJobUrls = new HashSet<>();
     Set<String> oldStages = new HashSet<>();
+    Set<String> oldSizes = new HashSet<>();
 
     public CompanyDetail(String url){
         url = url.split("\\?")[0];
@@ -64,6 +65,14 @@ public class CompanyDetail extends ReflectionDBObject {
                 this.oldStages.add(s);
                 this.stage.add(s);
             }
+
+            BasicDBList sizes = (BasicDBList)Helper.getDocumentFromMongo(MyMongoClient.getMongoClient(),
+                    MongoConfig.dbName, CompanyDetail.storeCollection,"Url", url).get("Size");
+            for (int i = 0; i<sizes.size(); i++){
+                String s = sizes.get(i).toString();
+                this.oldSizes.add(s);
+                this.size.add(s);
+            }
         }
     }
 
@@ -75,7 +84,7 @@ public class CompanyDetail extends ReflectionDBObject {
 //        String url = "http://www.lagou.com/gongsi/1914.html";
 
         CompanyDetail companyDetail = new CompanyDetail(url);
-//        companyDetail.begin();
+        companyDetail.begin();
     }
 
     public void begin(){
@@ -111,8 +120,9 @@ public class CompanyDetail extends ReflectionDBObject {
     public void processRightInfo(Element content_right){
         this.location = content_right.select(".c_tags table tbody tr").first().select("td").get(1).text();
         this.field = content_right.select(".c_tags table tbody tr").get(1).select("td").get(1).text();
-
-        this.size.add(content_right.select(".c_tags table tbody tr").get(2).select("td").get(1).text());
+        String size = content_right.select(".c_tags table tbody tr").get(2).select("td").get(1).text();
+        if (!this.oldSizes.contains(size))
+            this.size.add(size);
         this.homepage = content_right.select(".c_tags table tbody tr")
                 .get(3).select("td").get(1).select("a").attr("href");
         String stage = content_right.select(".c_stages .stageshow .c5").first().text();
