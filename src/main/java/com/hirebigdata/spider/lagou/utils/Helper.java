@@ -58,6 +58,26 @@ public class Helper {
         }
     }
 
+    public static boolean updateMongoDB(MongoClient mongoClient, String dbName,
+                                         String collectionName, ReflectionDBObject object,
+                                         String field, String value){
+        try {
+            DB db = mongoClient.getDB(dbName);
+            DBCollection collection = db.getCollection(collectionName);
+
+
+            collection.update(
+                    getDocumentFromMongo(mongoClient, dbName, collectionName, field, value),
+                    object);
+
+            return true;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public static boolean saveToMongoDB(MongoClient mongoClient, String dbName,
                                         String collectionName, ReflectionDBObject object) {
         try {

@@ -51,23 +51,23 @@ public class CompanyDetail extends ReflectionDBObject {
                 MongoConfig.dbName, CompanyDetail.storeCollection,"Url", url);
         this.url = url;
         if (this.existedAlready){
-            BasicDBList jobs = (BasicDBList)Helper.getDocumentFromMongo(MyMongoClient.getMongoClient(),
-                    MongoConfig.dbName, CompanyDetail.storeCollection,"Url", url).get("JobList");
+            BasicDBObject cmp = Helper.getDocumentFromMongo(MyMongoClient.getMongoClient(),
+                    MongoConfig.dbName, CompanyDetail.storeCollection, "Url", url);
+            this.set_id(cmp.get("_id"));
+            BasicDBList jobs = (BasicDBList)cmp.get("JobList");
             for (int i = 0; i<jobs.size(); i++){
                 this.oldJobUrls.add(((BasicDBObject) jobs.get(i)).get("Job_link").toString());
                 this.jobList.add(Job.getJobFromBasicDBObject((BasicDBObject)jobs.get(i)));
             }
 
-            BasicDBList stages = (BasicDBList)Helper.getDocumentFromMongo(MyMongoClient.getMongoClient(),
-                    MongoConfig.dbName, CompanyDetail.storeCollection,"Url", url).get("Stage");
+            BasicDBList stages = (BasicDBList)cmp.get("Stage");
             for (int i = 0; i<stages.size(); i++){
                 String s = stages.get(i).toString();
                 this.oldStages.add(s);
                 this.stage.add(s);
             }
 
-            BasicDBList sizes = (BasicDBList)Helper.getDocumentFromMongo(MyMongoClient.getMongoClient(),
-                    MongoConfig.dbName, CompanyDetail.storeCollection,"Url", url).get("Size");
+            BasicDBList sizes = (BasicDBList)cmp.get("Size");
             for (int i = 0; i<sizes.size(); i++){
                 String s = sizes.get(i).toString();
                 this.oldSizes.add(s);
@@ -93,8 +93,12 @@ public class CompanyDetail extends ReflectionDBObject {
 
         try{
             this.startParse(doc);
-            Helper.saveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName,
-                    CompanyDetail.storeCollection, this);
+            if (this.existedAlready)
+                Helper.updateMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName,
+                        CompanyDetail.storeCollection, this, "Url", this.url);
+            else
+                Helper.saveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName,
+                        CompanyDetail.storeCollection, this);
         }catch (Exception ue){
             System.out.println(this.url);
             log.error(ue.getMessage() + " at " + this.url);
