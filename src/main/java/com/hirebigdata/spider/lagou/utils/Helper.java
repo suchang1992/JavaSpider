@@ -25,11 +25,28 @@ public class Helper {
 //                "Url", "123");
     }
 
+    public static BasicDBObject getDocumentFromMongo(MongoClient mongoClient, String dbName,
+                                                String collectionName, String field, String value){
+        try {
+            DB db = mongoClient.getDB(dbName);
+            DBCollection collection = db.getCollection(collectionName);
+
+            return (BasicDBObject)collection.findOne(new BasicDBObject().append(field, value));
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public static boolean isExistInMongoDB(MongoClient mongoClient, String dbName,
                                            String collectionName, String field, String value) {
         try {
             DB db = mongoClient.getDB(dbName);
             DBCollection collection = db.getCollection(collectionName);
+
+            if (field == "Url" && (value.indexOf("http://www.lagou.com/gongsi/") != 0))
+                value = value.replaceAll("gongsi", "c");
 
             DBCursor cursor = collection.find(new BasicDBObject().append(field, value));
 
