@@ -3,16 +3,15 @@ package com.hirebigdata.spider.lagou.company;
 import com.hirebigdata.spider.lagou.config.MongoConfig;
 import com.hirebigdata.spider.lagou.utils.Helper;
 import com.hirebigdata.spider.lagou.utils.MyMongoClient;
-import com.mongodb.MongoClient;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
 import com.mongodb.ReflectionDBObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * User: shellbye.com@gmail.com
@@ -39,19 +38,34 @@ public class CompanyDetail extends ReflectionDBObject {
     List<Member> members = new ArrayList<>();//http://www.lagou.com/gongsi/250.html
     List<Product> products = new ArrayList<>();//http://www.lagou.com/gongsi/1575.html
 
+    boolean existedAlready = false;
+    boolean newJobAllGot = false;
+    Set<String> oldJobUrls = new HashSet<>();
+
     public CompanyDetail(String url){
+        url = url.split("\\?")[0];
+        this.existedAlready = Helper.isExistInMongoDB(MyMongoClient.getMongoClient(),
+                MongoConfig.dbName, MongoConfig.collectionLagouCompanyDetail,"Url", url);
         this.url = url;
+        if (this.existedAlready){
+            BasicDBList jobs = (BasicDBList)Helper.getDocumentFromMongo(MyMongoClient.getMongoClient(),
+                    MongoConfig.dbName, MongoConfig.collectionLagouCompanyDetail,"Url", url).get("JobList");
+            for (int i = 0; i<jobs.size(); i++){
+                this.oldJobUrls.add(((BasicDBObject) jobs.get(i)).get("Job_link").toString());
+                this.jobList.add(Job.getJobFromBasicDBObject((BasicDBObject)jobs.get(i)));
+            }
+        }
     }
 
     public static void main(String[] args) throws Exception{
 //        String url = "http://www.lagou.com/gongsi/1575.html";
 //        String url = "http://www.lagou.com/gongsi/451.html";
 //        String url = "http://www.lagou.com/gongsi/250.html";
-        String url = "http://www.lagou.com/gongsi/49408.html";
+        String url = "http://www.lagou.com/c/28133.html?o=0";
 //        String url = "http://www.lagou.com/gongsi/1914.html";
 
         CompanyDetail companyDetail = new CompanyDetail(url);
-        companyDetail.begin();
+//        companyDetail.begin();
     }
 
     public void begin(){
@@ -60,7 +74,8 @@ public class CompanyDetail extends ReflectionDBObject {
 
         try{
             this.startParse(doc);
-            Helper.saveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName, MongoConfig.collectionLagouCompanyDetail, this);
+            Helper.saveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName,
+                    MongoConfig.collectionLagouCompanyDetail, this);
         }catch (Exception ue){
             System.out.println(this.url);
             log.error(ue.getMessage() + " at " + this.url);
@@ -87,7 +102,8 @@ public class CompanyDetail extends ReflectionDBObject {
         this.location = content_right.select(".c_tags table tbody tr").first().select("td").get(1).text();
         this.field = content_right.select(".c_tags table tbody tr").get(1).select("td").get(1).text();
         this.size.add(content_right.select(".c_tags table tbody tr").get(2).select("td").get(1).text());
-        this.homepage = content_right.select(".c_tags table tbody tr").get(3).select("td").get(1).select("a").attr("href");
+        this.homepage = content_right.select(".c_tags table tbody tr")
+                .get(3).select("td").get(1).select("a").attr("href");
         this.stage.add(content_right.select(".c_stages .stageshow .c5").first().text());
     }
 
@@ -98,7 +114,8 @@ public class CompanyDetail extends ReflectionDBObject {
         if (content_left.select(".c_box .oneword").first() != null)
             this.brief = content_left.select(".c_box .oneword").first().text();
 
-        this.labels = Arrays.asList(content_left.select(".c_box #hasLabels").first().select("li").text().split(" "));
+        this.labels = Arrays.asList(content_left.select(".c_box #hasLabels")
+                .first().select("li").text().split(" "));
         if (content_left.select(".c_section .c_intro").first() != null)
             this.introduction = content_left.select(".c_section .c_intro").first().text();
 
@@ -132,16 +149,19 @@ public class CompanyDetail extends ReflectionDBObject {
     public void processJobInfo(Element content_left){
         Elements jobs = content_left.select("#jobList li");
         Element moreJob = content_left.select(".c_section dd .positions_more").first();
-        if (moreJob != null){
+        if (moreJob != null && !this.newJobAllGot){
             this.getMoreJobs(moreJob.attr("href"));
         }else {
-            for (Element job : jobs){
-                this.getJobDetail(job.select("a").attr("href"));
+            for (int i=0; i<jobs.size() && !this.newJobAllGot; i++){
+                this.getJobDetail(jobs.get(i).select("a").attr("href"));
             }
         }
     }
 
     public void getJobDetail(String jobLink){
+        if (this.oldJobUrls.contains(jobLink)){
+            this.newJobAllGot = true;
+        }
         try{
             String jobHtml = Helper.doGet(jobLink);
             Document doc = Jsoup.parse(jobHtml);
@@ -152,7 +172,8 @@ public class CompanyDetail extends ReflectionDBObject {
             job1.experiment = doc.select(".content_l .job_detail .job_request span").get(2).text();
             job1.scholar = doc.select(".content_l .job_detail .job_request span").get(3).text();
             job1.type = doc.select(".content_l .job_detail .job_request span").get(4).text();
-            job1.publish_date = doc.select("#container > div.clearfix > div.content_l > dl > dd.job_request > div").first().text();
+            job1.publish_date = doc.select("#container > div.clearfix > div.content_l " +
+                    "> dl > dd.job_request > div").first().text();
             job1.jd = doc.select(".content_l .job_bt").text();
             this.jobList.add(job1);
         }catch (Exception e){
