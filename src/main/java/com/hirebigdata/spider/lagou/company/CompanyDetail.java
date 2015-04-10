@@ -188,8 +188,10 @@ public class CompanyDetail extends ReflectionDBObject {
     }
 
     public void getJobDetail(String jobLink){
+        jobLink = jobLink.split("\\?")[0];
         if (this.oldJobUrls.contains(jobLink)){
             this.newJobAllGot = true;
+            return;
         }
         try{
             String jobHtml = Helper.doGet(jobLink);
@@ -216,12 +218,12 @@ public class CompanyDetail extends ReflectionDBObject {
         Document doc = Jsoup.parse(jobListIndex);
 
         Integer totalPage = (int)Math.ceil(Double.parseDouble(doc.select(".jobsTotalB i").text()) / 10.0);
-        for (int i=1; i<=totalPage; i++){
+        for (int i=1; i<=totalPage && !this.newJobAllGot; i++){
             String jobListPage = Helper.doGet(jobListLink + "?pageNo=" + String.valueOf(i));
             Document jobsAtPage = Jsoup.parse(jobListPage);
             Elements jobs = jobsAtPage.select("#searchForm li");
-            for (Element job : jobs){
-                this.getJobDetail(job.select("a").attr("href"));
+            for (int j = 0; j<jobs.size() && !this.newJobAllGot; j++){
+                this.getJobDetail(jobs.get(j).select("a").attr("href"));
             }
         }
     }
