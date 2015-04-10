@@ -29,11 +29,11 @@ public class CompanyDetail extends ReflectionDBObject {
     String brief = "";
     String location = "";
     String field = "";
-    String size = "";
     String homepage = "";
     String introduction = "";
-    String stage = "";
     String logo = "";
+    List<String> stage = new ArrayList<>();
+    List<String> size = new ArrayList<>();
     List<String> labels = new ArrayList<>();
     List<Job> jobList = new ArrayList<>();//http://www.lagou.com/gongsi/451.html  http://www.lagou.com/gongsi/6296.html
     List<Member> members = new ArrayList<>();//http://www.lagou.com/gongsi/250.html
@@ -86,9 +86,9 @@ public class CompanyDetail extends ReflectionDBObject {
     public void processRightInfo(Element content_right){
         this.location = content_right.select(".c_tags table tbody tr").first().select("td").get(1).text();
         this.field = content_right.select(".c_tags table tbody tr").get(1).select("td").get(1).text();
-        this.size = content_right.select(".c_tags table tbody tr").get(2).select("td").get(1).text();
+        this.size.add(content_right.select(".c_tags table tbody tr").get(2).select("td").get(1).text());
         this.homepage = content_right.select(".c_tags table tbody tr").get(3).select("td").get(1).select("a").attr("href");
-        this.stage = content_right.select(".c_stages .stageshow .c5").first().text();
+        this.stage.add(content_right.select(".c_stages .stageshow .c5").first().text());
     }
 
     public void processLeftInfo(Element content_left){
@@ -232,11 +232,11 @@ public class CompanyDetail extends ReflectionDBObject {
         this.location = location;
     }
 
-    public String getSize() {
+    public List<String> getSize() {
         return size;
     }
 
-    public void setSize(String size) {
+    public void setSize(List<String> size) {
         this.size = size;
     }
 
@@ -256,11 +256,11 @@ public class CompanyDetail extends ReflectionDBObject {
         this.introduction = introduction;
     }
 
-    public String getStage() {
+    public List<String> getStage() {
         return stage;
     }
 
-    public void setStage(String stage) {
+    public void setStage(List<String> stage) {
         this.stage = stage;
     }
 
