@@ -1,9 +1,11 @@
 package com.hirebigdata.spider.lagou.company;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.ReflectionDBObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 
 /**
  * User: shellbye.com@gmail.com
@@ -22,8 +24,22 @@ public class Job extends ReflectionDBObject {
     String crawled_time = "";
 
     Job(String job_link){
-        this.job_link = job_link;
+        this.job_link = job_link.split("\\?")[0];
         this.crawled_time = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+    }
+
+    public static Job getJobFromBasicDBObject(BasicDBObject dbObject){
+        Job job = new Job((String)dbObject.get("Job_link"));
+        job.setCrawled_time((String)dbObject.get("Crawled_time"));
+        job.setExperiment((String)dbObject.get("Experiment"));
+        job.setJd((String)dbObject.get("Jd"));
+        job.setJob_name((String)dbObject.get("Job_name"));
+        job.setLocation((String)dbObject.get("Location"));
+        job.setPublish_date((String)dbObject.get("Publish_date"));
+        job.setSalary((String)dbObject.get("Salary"));
+        job.setScholar((String)dbObject.get("Scholar"));
+        job.setType((String)dbObject.get("Type"));
+        return job;
     }
 
     public static void main(String[] args){
