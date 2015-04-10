@@ -31,8 +31,8 @@ public class CompanyDetail extends ReflectionDBObject {
     String homepage = "";
     String introduction = "";
     String logo = "";
-    List<String> stage = new ArrayList<>();
-    List<String> size = new ArrayList<>();
+    List<KeyWithCrawledTime> stage = new ArrayList<>();
+    List<KeyWithCrawledTime> size = new ArrayList<>();
     List<String> labels = new ArrayList<>();
     List<Job> jobList = new ArrayList<>();//http://www.lagou.com/gongsi/451.html  http://www.lagou.com/gongsi/6296.html
     List<Member> members = new ArrayList<>();//http://www.lagou.com/gongsi/250.html
@@ -62,16 +62,18 @@ public class CompanyDetail extends ReflectionDBObject {
 
             BasicDBList stages = (BasicDBList)cmp.get("Stage");
             for (int i = 0; i<stages.size(); i++){
-                String s = stages.get(i).toString();
+                String s = ((BasicDBObject)stages.get(i)).get("Key").toString();
                 this.oldStages.add(s);
-                this.stage.add(s);
+                this.stage.add(KeyWithCrawledTime
+                        .getKeyWithCrawledTimeFromBasicDBObject((BasicDBObject) stages.get(i)));
             }
 
-            BasicDBList sizes = (BasicDBList)cmp.get("Size");
+            BasicDBList sizes = (BasicDBList) cmp.get("Size");
             for (int i = 0; i<sizes.size(); i++){
-                String s = sizes.get(i).toString();
+                String s = ((BasicDBObject)sizes.get(i)).get("Key").toString();
                 this.oldSizes.add(s);
-                this.size.add(s);
+                this.size.add(KeyWithCrawledTime
+                        .getKeyWithCrawledTimeFromBasicDBObject((BasicDBObject)sizes.get(i)));
             }
         }
     }
@@ -126,12 +128,12 @@ public class CompanyDetail extends ReflectionDBObject {
         this.field = content_right.select(".c_tags table tbody tr").get(1).select("td").get(1).text();
         String size = content_right.select(".c_tags table tbody tr").get(2).select("td").get(1).text();
         if (!this.oldSizes.contains(size))
-            this.size.add(size);
+            this.size.add(new KeyWithCrawledTime(size));
         this.homepage = content_right.select(".c_tags table tbody tr")
                 .get(3).select("td").get(1).select("a").attr("href");
         String stage = content_right.select(".c_stages .stageshow .c5").first().text();
         if (!this.oldStages.contains(stage))
-            this.stage.add(stage);
+            this.stage.add(new KeyWithCrawledTime(stage));
     }
 
     public void processLeftInfo(Element content_left){
@@ -280,11 +282,11 @@ public class CompanyDetail extends ReflectionDBObject {
         this.location = location;
     }
 
-    public List<String> getSize() {
+    public List<KeyWithCrawledTime> getSize() {
         return size;
     }
 
-    public void setSize(List<String> size) {
+    public void setSize(List<KeyWithCrawledTime> size) {
         this.size = size;
     }
 
@@ -304,11 +306,11 @@ public class CompanyDetail extends ReflectionDBObject {
         this.introduction = introduction;
     }
 
-    public List<String> getStage() {
+    public List<KeyWithCrawledTime> getStage() {
         return stage;
     }
 
-    public void setStage(List<String> stage) {
+    public void setStage(List<KeyWithCrawledTime> stage) {
         this.stage = stage;
     }
 
