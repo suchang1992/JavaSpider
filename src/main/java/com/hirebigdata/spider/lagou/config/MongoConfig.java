@@ -10,4 +10,5 @@ public class MongoConfig {
     public static final String dbName = "lagou";
     public static final String collectionLagouCompanyInList = "companyInList";
     public static final String collectionLagouCompanyDetail = "companyDetail";
+    public static final String collectionLagouCompanyDetailV2 = "CompanyDetailV2";
 }
