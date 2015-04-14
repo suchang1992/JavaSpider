@@ -38,7 +38,7 @@ public class CompanyDetail extends ReflectionDBObject {
     List<Member> members = new ArrayList<>();//http://www.lagou.com/gongsi/250.html
     List<Product> products = new ArrayList<>();//http://www.lagou.com/gongsi/1575.html
 
-    static String storeCollection = MongoConfig.collectionLagouCompanyDetailV2;
+    static String storeCollection = MongoConfig.collectionLagouCompanyDetailV3;
     boolean existedAlready = false;
     boolean newJobAllGot = false;
     Set<String> oldJobUrls = new HashSet<>();
@@ -91,6 +91,9 @@ public class CompanyDetail extends ReflectionDBObject {
 
     public void begin(){
         String result = Helper.doGet(this.url);
+        if (result == null || "".equals(result)){
+            log.error("try max time doGet still failed at " + this.url);
+        }
         Document doc = Jsoup.parse(result);
 
         try{
@@ -168,10 +171,15 @@ public class CompanyDetail extends ReflectionDBObject {
         Elements products = content_left.select(".c_product");
         for (Element product : products){
             Product product1 = new Product();
-            product1.name = product.select("dd .cp_intro .cp_h3_c a").first().text();
-            product1.url = product.select("dd .cp_intro .cp_h3_c a").first().attr("href");
-            product1.intro = product.select("dd .cp_intro .scroll-pane").first().text();
-            this.products.add(product1);
+            try{
+                product1.name = product.select("dd .cp_intro .cp_h3_c a").first().text();
+                product1.url = product.select("dd .cp_intro .cp_h3_c a").first().attr("href");
+                product1.intro = product.select("dd .cp_intro .scroll-pane").first().text();
+                this.products.add(product1);
+            }catch (NullPointerException en){
+                log.error("error when process products " + en.getMessage());
+                this.products.add(product1);
+            }
         }
     }
 
@@ -215,9 +223,16 @@ public class CompanyDetail extends ReflectionDBObject {
 
     public void getMoreJobs(String jobListLink){
         String jobListIndex = Helper.doGet(jobListLink);
+        if (jobListIndex == null){
+            log.error("try max time doGet still failed at " + this.url);
+        }
         Document doc = Jsoup.parse(jobListIndex);
 
-        Integer totalPage = (int)Math.ceil(Double.parseDouble(doc.select(".jobsTotalB i").text()) / 10.0);
+        String pageString = doc.select(".jobsTotalB i").text();
+        if ("".equals(pageString)){
+            return;
+        }
+        Integer totalPage = (int)Math.ceil(Double.parseDouble(pageString) / 10.0);
         for (int i=1; i<=totalPage && !this.newJobAllGot; i++){
             String jobListPage = Helper.doGet(jobListLink + "?pageNo=" + String.valueOf(i));
             Document jobsAtPage = Jsoup.parse(jobListPage);
