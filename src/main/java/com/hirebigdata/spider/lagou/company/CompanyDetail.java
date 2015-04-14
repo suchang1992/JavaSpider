@@ -203,6 +203,10 @@ public class CompanyDetail extends ReflectionDBObject {
         }
         try{
             String jobHtml = Helper.doGet(jobLink);
+            if (jobHtml == null || "".equals(jobHtml)){
+                log.error("try max time doGet still failed at " + jobLink);
+                return;
+            }
             Document doc = Jsoup.parse(jobHtml);
             Job job1 = new Job(jobLink);
             job1.job_name = doc.select(".content_l .job_detail .join_tc_icon h1").attr("title");
@@ -229,7 +233,7 @@ public class CompanyDetail extends ReflectionDBObject {
         Document doc = Jsoup.parse(jobListIndex);
 
         String pageString = doc.select(".jobsTotalB i").text();
-        if ("".equals(pageString)){
+        if ("".equals(pageString) || pageString == null){
             return;
         }
         Integer totalPage = (int)Math.ceil(Double.parseDouble(pageString) / 10.0);
@@ -241,6 +245,11 @@ public class CompanyDetail extends ReflectionDBObject {
                 this.getJobDetail(jobs.get(j).select("a").attr("href"));
             }
         }
+    }
+
+    @Override
+    public String toString(){
+        return this.url + " " + this.existedAlready;
     }
 
     public String getField() {
