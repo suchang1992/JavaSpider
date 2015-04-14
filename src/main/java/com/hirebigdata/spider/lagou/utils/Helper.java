@@ -6,8 +6,11 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.bson.BSONException;
 
 import java.io.*;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.Charset;
 
 /**
@@ -87,8 +90,18 @@ public class Helper {
             collection.insert(object);
 
             return true;
-        } catch (Exception e) {
+        }catch (MongoException e) {
             log.error(e.getMessage());
+            System.out.println(object);
+            updateMongoDB(mongoClient, dbName, collectionName, object, "Url", (String) object.get("url"));
+            return true;
+        } catch (BSONException e) {
+            log.error(e.getMessage() + object);
+            e.printStackTrace();
+            return false;
+        } catch (Exception e) {
+            log.error(e.getMessage() + object);
+            System.out.println(object);
             e.printStackTrace();
             return false;
         }
@@ -116,11 +129,24 @@ public class Helper {
                 return getHtml(response);
             }
             log.error("try too much with " + url + ", final status code is " + status_code);
-            return null;
+            return "";
+        } catch (SocketException e) {
+            log.error("too much request, sleep thirty seconds");
+            try{
+                Thread.sleep(30 * 1000);
+            }catch (InterruptedException i){
+                i.printStackTrace();
+            }
+            e.printStackTrace();
+            return "";
+        } catch (SocketTimeoutException e) {
+            log.error("java.net.SocketTimeoutException: Read timed out");
+            e.printStackTrace();
+            return "";
         } catch (Exception e) {
             log.error(e.getMessage());
             e.printStackTrace();
-            return null;
+            return "";
         }
     }
 
@@ -131,6 +157,7 @@ public class Helper {
                     new InputStreamReader(response.getEntity().getContent()));
 
             String line;
+            // todo org.apache.http.TruncatedChunkException: Truncated chunk ( expected size: 13898; actual size: 11173)
             while ((line = rd.readLine()) != null) {
                 result.append(line);
             }
