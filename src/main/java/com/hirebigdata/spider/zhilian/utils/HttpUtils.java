@@ -80,6 +80,21 @@ public class HttpUtils {
 
     }
 
+    public static HttpResponse doGetResponse(String url, CookieStore cs){
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpGet request = new HttpGet(url);
+        try {
+            installCookie(request, cs);
+            HttpResponse response = client.execute(request);
+            updateCookie(response, cs);
+
+            return response;
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public static String getHtml(HttpResponse response) {
         StringBuffer result = new StringBuffer();
         try {
@@ -156,6 +171,24 @@ public class HttpUtils {
             updateCookie(response, cs);
 
             return getHtml(response);
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static HttpResponse doPostResponse(String url, HashMap<String, String> formData, CookieStore cs){
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPost request = new HttpPost(url);
+
+        installFormData(formData, request);
+
+        installCookie(request, cs);
+        try {
+            HttpResponse response = client.execute(request);
+            updateCookie(response, cs);
+
+            return response;
         }catch (Exception e){
             e.printStackTrace();
             return null;
