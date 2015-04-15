@@ -8,6 +8,7 @@ import com.mongodb.ReflectionDBObject;
  */
 public class RawResume extends ReflectionDBObject {
     String cvId = "";
+    String link = "";
     String rawHtml = "";
 
     public String getCvId() {
@@ -16,6 +17,14 @@ public class RawResume extends ReflectionDBObject {
 
     public void setCvId(String cvId) {
         this.cvId = cvId;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
     }
 
     public String getRawHtml() {
