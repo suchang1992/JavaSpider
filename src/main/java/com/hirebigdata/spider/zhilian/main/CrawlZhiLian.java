@@ -10,21 +10,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hirebigdata.spider.zhilian.config.ZhiLianConfig;
+import com.hirebigdata.spider.zhilian.resume.RawResume;
 import com.hirebigdata.spider.zhilian.utils.HttpUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 
 import com.ImagePreProcess3;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 /**
@@ -33,8 +40,73 @@ import org.jsoup.select.Elements;
  */
 public class CrawlZhiLian {
     HttpClient httpclient = HttpClientBuilder.create().build();
+    CookieStore cs = new BasicCookieStore();
     public static void main(String[] args) throws Exception{
-        new CrawlZhiLian().tryToLogin();
+        CrawlZhiLian zhiLian = new CrawlZhiLian();
+        zhiLian.tryToLogin();
+        zhiLian.getResumeWithKeyword("java");
+    }
+
+    public void getResumeWithKeyword(String keyword) throws Exception {
+        HttpGet httpget2 = new HttpGet("http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
+                + keyword + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1");
+        httpget2.setHeader("Referer", "http://rdsearch.zhaopin.com/home/SearchByCustom");
+
+        HttpResponse getResponse3 = httpclient.execute(httpget2);
+        Document doc = Jsoup.parse(HttpUtils.getHtml(getResponse3));
+
+        String page = doc.select("#rd-resumelist-pageNum").first().text().split("/")[1];
+
+        int pageNum = Integer.parseInt(page);
+        List<RawResume> rawResumeListAll = processHttpGet(httpget2);
+        for (int i=2; i<=pageNum; i++){
+            rawResumeListAll.addAll(getMoreResume(keyword, i));
+        }
+
+        System.out.println(rawResumeListAll.size());
+
+    }
+
+    public List<RawResume> getMoreResume(String keyword, int page) throws Exception{
+        System.out.println("process page " + page);
+        Thread.sleep(10 * 1000);
+        HttpGet httpget2 = new HttpGet("http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
+                + keyword + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + page);
+        httpget2.setHeader("Referer", "http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
+                + keyword + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + (page-1));
+
+        return processHttpGet(httpget2);
+    }
+
+    public List<RawResume> processHttpGet(HttpGet httpget2) throws Exception{
+        HttpResponse getResponse3 = httpclient.execute(httpget2);
+        Document doc = Jsoup.parse(HttpUtils.getHtml(getResponse3));
+        Elements resumes = doc.select(".info");
+        List<RawResume> rawResumeList = new ArrayList<>();
+        for (Element e : resumes){
+            System.out.println("           process resume element");
+            RawResume rawResume = new RawResume();
+            rawResume.setCvId(e.attr("tag"));
+            rawResume.setLink(e.select("a").attr("href"));
+            HttpGet getResumeHtml = new HttpGet(rawResume.getLink());
+            HttpResponse response = httpclient.execute(getResumeHtml);
+
+            String resumeHtml = HttpUtils.getHtml(response);
+            Document resumeDoc = Jsoup.parse(resumeHtml);
+            if (resumeDoc.select("#resumeContentBody").first() != null)
+                rawResume.setRawHtml(resumeDoc.select("#resumeContentBody").first().text());
+            else{
+                // todo
+                System.out.println("!!!!!! code, wait for ten second.");
+                Thread.sleep(10 * 1000);
+            }
+            rawResumeList.add(rawResume);
+            // 不加这一句就只能获取两个简历文本
+            getResumeHtml.releaseConnection();
+        }
+        httpget2.releaseConnection();
+
+        return rawResumeList;
     }
 
     public void tryToLogin() throws IOException {
@@ -74,19 +146,13 @@ public class CrawlZhiLian {
                 continue;
             }
             System.out.println("successfully login!");
-            HttpGet httpget2 = new HttpGet("http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1=java&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1");
-            httpget2.setHeader("Referer", "http://rdsearch.zhaopin.com/home/SearchByCustom");
-            HttpResponse getResponse3 = httpclient.execute(httpget2);
-            Document doc = Jsoup.parse(HttpUtils.getHtml(getResponse3));
-            Elements resumes = doc.select(".info");
-            System.out.println(resumes.size());
             return;
         }
     }
 
     public File saveValidatePicture() {
         try {
-            String a = ZhiLianConfig.VALIDATA_PICTURE + System.currentTimeMillis() / 1000L;
+            String a = ZhiLianConfig.PICTURE_TIME_STAMP + System.currentTimeMillis() / 1000L;
             HttpGet httpgetNewPicture = new HttpGet(a);
             HttpResponse getResponse = httpclient.execute(httpgetNewPicture);
             HttpEntity httpEntity = getResponse.getEntity();
@@ -140,5 +206,35 @@ public class CrawlZhiLian {
             }
         }
         return line;
+    }
+
+    public static void installCookie(HttpRequestBase request, CookieStore cs) {
+        String cookieStr = "";
+        List<Cookie> list = cs.getCookies();
+        for (Cookie cookie : list) {
+            cookieStr += cookie.getName() + "=" + cookie.getValue() + ";";
+        }
+        if (cookieStr.length() > 1) {
+            request.addHeader("Cookie", cookieStr);
+        }
+    }
+
+    public static void updateCookie(HttpResponse response, CookieStore cs) {
+        Header[] headers = response.getHeaders("Set-Cookie");
+        for (Header h : headers) {
+            String name = h.getName();
+            String value = h.getValue();
+
+            if ("Set-Cookie".equalsIgnoreCase(name)) {
+                String[] tempStr = value.split(";");
+                for (String str : tempStr) {
+                    String[] cookies = str.split("=", 2);
+                    if (cookies.length == 1)
+                        cs.addCookie(new BasicClientCookie(cookies[0], ""));
+                    else
+                        cs.addCookie(new BasicClientCookie(cookies[0], cookies[1]));
+                }
+            }
+        }
     }
 }
