@@ -6,6 +6,6 @@ package com.hirebigdata.spider.zhilian.config;
  */
 public class ZhiLianConfig {
     public final static String LOGIN_POST = "http://rd2.zhaopin.com/loginmgr/loginproc.asp";
-    public final static String VALIDATA_PICTURE = "http://rd2.zhaopin.com/s/loginmgr/picturetimestamp.asp?t=";
-    public final static String LOGOUT = "http://rd2.zhaopin.com/s/loginmgr/logout.asp";
+    public final static String PICTURE_TIME_STAMP = "http://rd2.zhaopin.com/s/loginmgr/picturetimestamp.asp?t=";
+    public final static String CHECK_VALIDATING_CODE = "http://rd.zhaopin.com/resumePreview/resume/_CheackValidatingCode?validatingCode=";
 }

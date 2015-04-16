@@ -34,4 +34,8 @@ public class RawResume extends ReflectionDBObject {
     public void setRawHtml(String rawHtml) {
         this.rawHtml = rawHtml;
     }
+
+    public String toString(){
+        return this.link;
+    }
 }
