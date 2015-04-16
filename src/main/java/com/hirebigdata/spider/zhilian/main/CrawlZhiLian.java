@@ -9,6 +9,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hirebigdata.spider.lagou.utils.Helper;
 import com.hirebigdata.spider.zhilian.config.ZhiLianConfig;
 import com.hirebigdata.spider.zhilian.resume.RawResume;
 import com.hirebigdata.spider.zhilian.utils.HttpUtils;
@@ -22,6 +23,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -40,7 +42,6 @@ import org.jsoup.select.Elements;
  */
 public class CrawlZhiLian {
     HttpClient httpclient = HttpClientBuilder.create().build();
-    CookieStore cs = new BasicCookieStore();
     public static void main(String[] args) throws Exception{
         CrawlZhiLian zhiLian = new CrawlZhiLian();
         zhiLian.tryToLogin();
@@ -69,7 +70,6 @@ public class CrawlZhiLian {
 
     public List<RawResume> getMoreResume(String keyword, int page) throws Exception{
         System.out.println("process page " + page);
-        Thread.sleep(10 * 1000);
         HttpGet httpget2 = new HttpGet("http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
                 + keyword + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + page);
         httpget2.setHeader("Referer", "http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
@@ -89,23 +89,32 @@ public class CrawlZhiLian {
             rawResume.setCvId(e.attr("tag"));
             rawResume.setLink(e.select("a").attr("href"));
             HttpGet getResumeHtml = new HttpGet(rawResume.getLink());
-            HttpResponse response = httpclient.execute(getResumeHtml);
+            try {
+                HttpResponse response = httpclient.execute(getResumeHtml);
 
-            String resumeHtml = HttpUtils.getHtml(response);
-            Document resumeDoc = Jsoup.parse(resumeHtml);
-            if (resumeDoc.select("#resumeContentBody").first() != null)
-                rawResume.setRawHtml(resumeDoc.select("#resumeContentBody").first().text());
-            else{
-                // todo
-                System.out.println("!!!!!! code, wait for ten second.");
-                Thread.sleep(10 * 1000);
+                String resumeHtml = HttpUtils.getHtml(response);
+                Document resumeDoc = Jsoup.parse(resumeHtml);
+                if (resumeDoc.select("#resumeContentBody").first() != null)
+                    rawResume.setRawHtml(resumeDoc.select("#resumeContentBody").first().text());
+                else{
+                    // todo
+                    System.out.println("!!!!!! code, wait for ten second.");
+                    String code = getValidateCode("http://rd2.zhaopin.com/s/loginmgr/" +
+                            "monitorvalidatingcode.asp?t=" + System.currentTimeMillis() / 1000L);
+                    HttpPost codePost = new HttpPost(ZhiLianConfig.CHECK_VALIDATING_CODE + code);
+                    HttpResponse codeResponse = httpclient.execute(codePost);
+                    String result = Helper.getHtml(codeResponse);
+                    System.out.println(result);
+                }
+                rawResumeList.add(rawResume);
+                // 不加这一句就只能获取两个简历文本
+                getResumeHtml.releaseConnection();
+            }catch (HttpHostConnectException e1){
+                System.out.println(rawResume.getLink());
+                e1.printStackTrace();
             }
-            rawResumeList.add(rawResume);
-            // 不加这一句就只能获取两个简历文本
-            getResumeHtml.releaseConnection();
         }
         httpget2.releaseConnection();
-
         return rawResumeList;
     }
 
@@ -125,7 +134,7 @@ public class CrawlZhiLian {
             params.add(new BasicNameValuePair("password", "linxiaohua87860519"));
 
             // validate
-            String validate = getValidateCode();
+            String validate = getValidateCode(ZhiLianConfig.PICTURE_TIME_STAMP + System.currentTimeMillis() / 1000L);
             params.add(new BasicNameValuePair("Validate", validate));
             params.add(new BasicNameValuePair("Submit", ""));
             httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
@@ -150,10 +159,10 @@ public class CrawlZhiLian {
         }
     }
 
-    public File saveValidatePicture() {
+    public File saveValidatePicture(String codePicUrl) {
         try {
-            String a = ZhiLianConfig.PICTURE_TIME_STAMP + System.currentTimeMillis() / 1000L;
-            HttpGet httpgetNewPicture = new HttpGet(a);
+//            String codePicUrl = ZhiLianConfig.PICTURE_TIME_STAMP + System.currentTimeMillis() / 1000L;
+            HttpGet httpgetNewPicture = new HttpGet(codePicUrl);
             HttpResponse getResponse = httpclient.execute(httpgetNewPicture);
             HttpEntity httpEntity = getResponse.getEntity();
 
@@ -171,10 +180,10 @@ public class CrawlZhiLian {
         }
     }
 
-    public String getValidateCode() {
+    public String getValidateCode(String codePicUrl) {
         String line = "";
         while (line.length() < 4) {
-            File f = saveValidatePicture();
+            File f = saveValidatePicture(codePicUrl);
             try {
                 // 因为ImagePreProcess3的main函数是直接将结果打印了出来，
                 // 所以这里我对console的输出做了重定向，打印到文件中，
