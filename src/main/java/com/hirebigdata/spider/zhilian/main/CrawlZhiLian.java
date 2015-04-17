@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,12 +50,32 @@ public class CrawlZhiLian {
     public static void main(String[] args) throws Exception {
         CrawlZhiLian zhiLian = new CrawlZhiLian();
         zhiLian.tryToLogin();
-        zhiLian.getResumeWithKeyword("php");
+        List<String> keywords = new ArrayList<>();
+//        keywords.add("java");
+//        keywords.add("php");
+        keywords.add("python");
+        keywords.add("c/c++");
+        keywords.add("lisp");
+        keywords.add("ruby");
+        keywords.add("linux");
+        keywords.add("css");
+        keywords.add("html");
+        keywords.add("js");
+        keywords.add("javascript");
+        keywords.add("web");
+        keywords.add("后台");
+        keywords.add("前端");
+        keywords.add("安卓");
+        keywords.add("android");
+        keywords.add("服务器");
+        keywords.add("server");
+        for (String keyword : keywords)
+            zhiLian.getResumeWithKeyword(keyword);
     }
 
     public void getResumeWithKeyword(String keyword) throws Exception {
         HttpGet httpget2 = new HttpGet("http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
-                + keyword + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1");
+                + URLEncoder.encode(keyword, "UTF-8")  + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1");
         httpget2.setHeader("Referer", "http://rdsearch.zhaopin.com/home/SearchByCustom");
 
         HttpResponse getResponse3 = httpclient.execute(httpget2);
@@ -67,7 +88,7 @@ public class CrawlZhiLian {
 //        Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
 //                MongoConfig.collectionZhilianResume, rawResumeListPage1);
         try {
-            for (int i = 102; i <= pageNum; i++) {
+            for (int i = 2; i <= pageNum; i++) {
                 List<RawResume> rawResumeList = getMoreResume(keyword, i);
                 Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                         MongoConfig.collectionZhilianResume, rawResumeList);
@@ -82,9 +103,9 @@ public class CrawlZhiLian {
     public List<RawResume> getMoreResume(String keyword, int page) throws Exception {
         System.out.println("process page " + page);
         HttpGet httpget2 = new HttpGet("http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
-                + keyword + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + page);
+                + URLEncoder.encode(keyword, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + page);
         httpget2.setHeader("Referer", "http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
-                + keyword + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + (page - 1));
+                + URLEncoder.encode(keyword, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + (page - 1));
 
         return processHttpGet(httpget2);
     }
@@ -199,6 +220,7 @@ public class CrawlZhiLian {
                 fo.write(b, 0, 1);
             di.close();
             fo.close();
+            httpgetNewPicture.releaseConnection();
             return f;
         } catch (Exception e) {
             return null;
