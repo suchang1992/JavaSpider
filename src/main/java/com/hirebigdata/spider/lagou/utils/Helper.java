@@ -12,6 +12,7 @@ import java.io.*;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.Charset;
+import java.util.List;
 
 /**
  * User: shellbye.com@gmail.com
@@ -24,7 +25,7 @@ public class Helper {
     static final int MAX_TRY_COUNT_WHEN_COUNTER_500 = 5;
 
     public static void main(String[] args) {
-//        isExistInMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName, MongoConfig.collectionLagouCompanyDetail,
+//        isExistInMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameLagou, MongoConfig.collectionLagouCompanyDetail,
 //                "Url", "123");
     }
 
@@ -102,6 +103,22 @@ public class Helper {
         } catch (Exception e) {
             log.error(e.getMessage() + object);
             System.out.println(object);
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean multiSaveToMongoDB(MongoClient mongoClient, String dbName,
+                                        String collectionName, List objects) {
+        try {
+            DB db = mongoClient.getDB(dbName);
+            DBCollection collection = db.getCollection(collectionName);
+
+            collection.insert(objects);
+
+            return true;
+        } catch (Exception e) {
+            log.error(e.getMessage());
             e.printStackTrace();
             return false;
         }

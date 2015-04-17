@@ -32,7 +32,7 @@ public class CrawlLagou implements Runnable {
         int count = 0;
         try{
             DBCursor cursor = MyMongoClient.getMongoClient()
-                    .getDB(MongoConfig.dbName)
+                    .getDB(MongoConfig.dbNameLagou)
                     .getCollection(MongoConfig.collectionLagouCompanyInList)
                     .find().skip(skip);
             System.out.println("skip: " + skip);
@@ -53,7 +53,7 @@ public class CrawlLagou implements Runnable {
 
     public static void main(String[] args){
         int loadOnEveryThread = 1000;
-        long totalCompany = MyMongoClient.getMongoClient().getDB(MongoConfig.dbName)
+        long totalCompany = MyMongoClient.getMongoClient().getDB(MongoConfig.dbNameLagou)
                 .getCollection(MongoConfig.collectionLagouCompanyInList).count();
         int threadCount = (int)(totalCompany / loadOnEveryThread);
         List<CrawlLagou> lagouList = new ArrayList<>();

@@ -3,7 +3,6 @@ package com.hirebigdata.spider.lagou.company;
 import com.hirebigdata.spider.lagou.config.MongoConfig;
 import com.hirebigdata.spider.lagou.utils.Helper;
 import com.hirebigdata.spider.lagou.utils.MyMongoClient;
-import com.mongodb.MongoClient;
 import com.mongodb.ReflectionDBObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -46,9 +45,9 @@ public class CompanyInList  extends ReflectionDBObject {
                     companyInList.setCategory(category);
                     companyInList.setName(company.select("a").attr("title"));
                     companyInList.setUrl(company.select("a").attr("href"));
-                    if (!Helper.isExistInMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName,
+                    if (!Helper.isExistInMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameLagou,
                             MongoConfig.collectionLagouCompanyInList, "Url", companyInList.url)){
-                        Helper.saveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName,
+                        Helper.saveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameLagou,
                                 MongoConfig.collectionLagouCompanyInList, companyInList);
                     }
                 }

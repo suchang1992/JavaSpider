@@ -48,11 +48,11 @@ public class CompanyDetail extends ReflectionDBObject {
     public CompanyDetail(String url){
         url = url.split("\\?")[0];
         this.existedAlready = Helper.isExistInMongoDB(MyMongoClient.getMongoClient(),
-                MongoConfig.dbName, CompanyDetail.storeCollection,"Url", url);
+                MongoConfig.dbNameLagou, CompanyDetail.storeCollection,"Url", url);
         this.url = url;
         if (this.existedAlready){
             BasicDBObject cmp = Helper.getDocumentFromMongo(MyMongoClient.getMongoClient(),
-                    MongoConfig.dbName, CompanyDetail.storeCollection, "Url", url);
+                    MongoConfig.dbNameLagou, CompanyDetail.storeCollection, "Url", url);
             this.set_id(cmp.get("_id"));
             BasicDBList jobs = (BasicDBList)cmp.get("JobList");
             for (int i = 0; i<jobs.size(); i++){
@@ -99,10 +99,10 @@ public class CompanyDetail extends ReflectionDBObject {
         try{
             this.startParse(doc);
             if (this.existedAlready)
-                Helper.updateMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName,
+                Helper.updateMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameLagou,
                         CompanyDetail.storeCollection, this, "Url", this.url);
             else
-                Helper.saveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbName,
+                Helper.saveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameLagou,
                         CompanyDetail.storeCollection, this);
         }catch (Exception ue){
             System.out.println(this.url);
