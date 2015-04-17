@@ -128,7 +128,7 @@ public class CompanyDetail extends ReflectionDBObject {
 
     public void processRightInfo(Element content_right){
         this.location = content_right.select(".c_tags table tbody tr").first().select("td").get(1).text();
-        this.field = content_right.select(".c_tags table tbody tr").get(1).select("td").get(1).text();
+        this.field = content_right.select(".c_tags table tbody tr").get(1).select("td").get(1).attr("title");
         String size = content_right.select(".c_tags table tbody tr").get(2).select("td").get(1).text();
         if (!this.oldSizes.contains(size))
             this.size.add(new KeyWithCrawledTime(size));
