@@ -12,12 +12,12 @@
         <param name="File" value="util.log" />
         <param name="Append" value="true" />
         <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} %-5p %l - %m%n"/>
+            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} %m -%-5p %l%n"/>
         </layout>
     </appender>
 
     <root>
-        <priority value ="error" />
+        <priority value ="debug" />
         <appender-ref ref="util" />
         <appender-ref ref="console" />
     </root>
