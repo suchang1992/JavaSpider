@@ -1,13 +1,6 @@
 package com.hirebigdata.spider.zhilian.main;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.net.SocketTimeoutException;
+import java.io.*;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +20,8 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 
@@ -61,7 +54,6 @@ public class CrawlZhiLian {
     public static void main(String[] args) throws Exception {
         CrawlZhiLian zhiLian = new CrawlZhiLian();
         zhiLian.tryToLogin();
-//        zhiLian.logout();
         List<String> keywords = new ArrayList<>();
 //        keywords.add("java");
 //        keywords.add("php");
@@ -76,9 +68,9 @@ public class CrawlZhiLian {
 //        keywords.add("javascript");
 //        keywords.add("web");
 //        keywords.add("后台");
-        keywords.add("前端");
-        keywords.add("安卓");
-        keywords.add("android");
+//        keywords.add("前端");
+//        keywords.add("安卓");
+//        keywords.add("android");
         keywords.add("服务器");
         keywords.add("server");
         keywords.add("研发");
@@ -100,27 +92,20 @@ public class CrawlZhiLian {
                 + URLEncoder.encode(keyword, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1");
         getFirstPage.setHeader("Referer", "http://rdsearch.zhaopin.com/home/SearchByCustom");
 
-        HttpResponse getResponse3 = httpClient.execute(getFirstPage);
+        HttpResponse getResponse3 = this.getResponse(getFirstPage);
         Document doc = Jsoup.parse(HttpUtils.getHtml(getResponse3));
         getFirstPage.releaseConnection();
 
         String page = doc.select("#rd-resumelist-pageNum").first().text().split("/")[1];
 
         int pageNum = Integer.parseInt(page);
-        while (true){
-            try {
-                log.warn("process page 1");
-                List<RawResume> rawResumeListPage1 = processHttpGet(getFirstPage, keyword);
-                getFirstPage.releaseConnection();
-                Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
-                        MongoConfig.collectionZhilianResume, rawResumeListPage1);
-                break;
-            } catch (ConnectTimeoutException e5) {
-                log.error("ConnectTimeoutException in getMoreResume");
-                this.logout();
-                this.tryToLogin();
-                continue;
-            }
+        while (true) {
+            log.warn("process page 1");
+            List<RawResume> rawResumeListPage1 = processHttpGet(getFirstPage, keyword);
+            getFirstPage.releaseConnection();
+            Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
+                    MongoConfig.collectionZhilianResume, rawResumeListPage1);
+            break;
         }
         getFirstPage.releaseConnection();
         try {
@@ -140,97 +125,81 @@ public class CrawlZhiLian {
                 + URLEncoder.encode(keyword, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + page);
         getPages.setHeader("Referer", "http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
                 + URLEncoder.encode(keyword, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + (page - 1));
-        while (true){
-            try {
-                return processHttpGet(getPages, keyword);
-            } catch (ConnectTimeoutException e5) {
-                this.logout();
-                this.tryToLogin();
-                log.error("ConnectTimeoutException in getMoreResume");
-                continue;
-            } catch (SocketTimeoutException se) {
-                log.error("SocketTimeoutException in getMoreResume");
-                continue;
-            }
-        }
+        return processHttpGet(getPages, keyword);
     }
 
-    public List<RawResume> processHttpGet(HttpGet getPage, String keyword) throws Exception {
-        HttpResponse getResponse3 = httpClient.execute(getPage);
+    public List<RawResume> processHttpGet(HttpGet getPage, String keyword) {
+        HttpResponse getResponse3 = this.getResponse(getPage);
         Document doc = Jsoup.parse(HttpUtils.getHtml(getResponse3));
         getPage.releaseConnection();
         Elements resumes = doc.select(".info");
         List<RawResume> rawResumeList = new ArrayList<>();
         for (Element e : resumes) {
-            log.warn("           process resume element");
             RawResume rawResume = new RawResume();
             rawResume.setCvId(e.attr("tag"));
             rawResume.setLink(e.select("a").attr("href"));
             rawResume.setKeyword(keyword);
-            try {
-                while (true) {
-                    Document resumeDoc;
-                    try {
-                        HttpGet getResumeHtml = new HttpGet(rawResume.getLink());
-                        log.warn("           get resume of " + rawResume.getLink());
-                        // todo stop here
-                        HttpResponse response = httpClient.execute(getResumeHtml);
-                        String resumeHtml = HttpUtils.getHtml(response);
-                        // 不加这一句就只能获取两个简历文本
-                        getResumeHtml.releaseConnection();
-                        resumeDoc = Jsoup.parse(resumeHtml);
-                    } catch (ConnectTimeoutException e5) {
-                        log.error("ConnectTimeoutException in getting resume");
-                        this.logout();
-                        this.tryToLogin();
-                        continue;
-                    }
-                    if (resumeDoc.select("#resumeContentBody").first() != null) {
-                        rawResume.setRawHtml(resumeDoc.select("#resumeContentBody").first().html());
+            while (true) {
+                Document resumeDoc;
+                HttpGet getResumeHtml = new HttpGet(rawResume.getLink());
+                log.warn("           get resume of " + rawResume.getLink());
+                HttpResponse response = this.getResponse(getResumeHtml);
+                String resumeHtml = HttpUtils.getHtml(response);
+                // 不加这一句就只能获取两个简历文本
+                getResumeHtml.releaseConnection();
+                resumeDoc = Jsoup.parse(resumeHtml);
+                if (resumeDoc.select("#resumeContentBody").first() != null) {
+                    rawResume.setRawHtml(resumeDoc.select("#resumeContentBody").first().html());
+                    break;
+                } else {
+                    if (resumeDoc.select("#resumeContentHead").first() != null) {
+                        log.warn("resume deleted " + rawResume.getCvId());
                         break;
-                    } else {
-                        if (resumeDoc.select("#resumeContentHead").first() != null) {
-                            log.warn("resume deleted " + rawResume.getCvId());
-                            break;
-                        }
-                        while (true) {
-                            log.warn("!!!!!! code appears !!!!!!.");
-                            String code = getValidateCode("http://rd2.zhaopin.com/s/loginmgr/" +
-                                    "monitorvalidatingcode.asp?t=" + System.currentTimeMillis() / 1000L);
+                    }
+                    while (true) {
+                        log.warn("!!!!!! code appears !!!!!!.");
+                        String code = getValidateCode("http://rd2.zhaopin.com/s/loginmgr/" +
+                                "monitorvalidatingcode.asp?t=" + System.currentTimeMillis() / 1000L);
 
-                            try {
-                                HttpPost codePost = new HttpPost(ZhiLianConfig.CHECK_VALIDATING_CODE + code);
-                                HttpResponse codeResponse = httpClient.execute(codePost);
-                                String result = Helper.getHtml(codeResponse);
-                                codePost.releaseConnection();
-                                if ("true".equals(result)) {
-                                    break;
-                                }
-                            } catch (ConnectTimeoutException e5) {
-                                log.error("ConnectTimeoutException in validate code");
-                                this.logout();
-                                this.tryToLogin();
-                            }
+                        HttpPost codePost = new HttpPost(ZhiLianConfig.CHECK_VALIDATING_CODE + code);
+                        HttpResponse codeResponse = this.getResponse(codePost);
+                        String result = Helper.getHtml(codeResponse);
+                        codePost.releaseConnection();
+                        if ("true".equals(result)) {
+                            break;
                         }
                     }
                 }
-                rawResumeList.add(rawResume);
-            } catch (HttpHostConnectException e1) {
-                log.error(e1);
             }
+            rawResumeList.add(rawResume);
         }
         return rawResumeList;
     }
 
-    public void logout() throws Exception {
+    public void logout() {
         HttpGet logout = new HttpGet("http://rd2.zhaopin.com/s/loginmgr/logout.asp");
-        HttpResponse response = httpClient.execute(logout);
+        HttpResponse response = this.getResponse(logout);
+        logout.releaseConnection();
         log.warn(response.toString());
         log.warn("logout");
-        logout.releaseConnection();
     }
 
-    public void tryToLogin() throws IOException {
+    public HttpResponse getResponse(HttpRequestBase requestBase) {
+        while (true) {
+            try {
+                HttpResponse response = httpClient.execute(requestBase);
+                return response;
+            } catch (ConnectTimeoutException e5) {
+                log.error("ConnectTimeoutException in validate code");
+                this.logout();
+                this.tryToLogin();
+            } catch (IOException ioe) {
+                log.error(ioe);
+            }
+        }
+    }
+
+    public void tryToLogin() {
         while (true) {
             log.warn("prepare to login");
             long nowTimeStamp = System.currentTimeMillis();
@@ -250,45 +219,43 @@ public class CrawlZhiLian {
             String validate = getValidateCode(ZhiLianConfig.PICTURE_TIME_STAMP + System.currentTimeMillis() / 1000L);
             params.add(new BasicNameValuePair("Validate", validate));
             params.add(new BasicNameValuePair("Submit", ""));
-            httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
             try {
-                HttpResponse postResponse = httpClient.execute(httppost);
-                log.warn("1st " + postResponse.toString());
-                httppost.releaseConnection();
-                if (postResponse.getStatusLine().getStatusCode() != 302) {
-                    log.warn("not 302, go on");
-                    continue;
-                }
-
-                Header[] header = postResponse.getHeaders("Location");
-                String location = header[0].getValue();
-                HttpGet httpget = new HttpGet(location);
-                HttpResponse getResponse2 = httpClient.execute(httpget);
-                log.warn("2nd " + getResponse2.toString());
-                httpget.releaseConnection();
-                if (getResponse2.getStatusLine().getStatusCode() != 200) {
-                    log.warn("not 200, go on");
-                    continue;
-                }
-                log.warn("successfully login!");
-                return;
-            } catch (ConnectTimeoutException e5) {
-                log.error("ConnectTimeoutException in tryToLogin");
-            } catch (SocketTimeoutException se) {
-                log.error("SocketTimeoutException in tryToLogin");
+                httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+            } catch (UnsupportedEncodingException ue) {
+                log.error(ue);
             }
+            HttpResponse postResponse = this.getResponse(httppost);
+            log.warn("1st " + postResponse.toString());
+            httppost.releaseConnection();
+            if (postResponse.getStatusLine().getStatusCode() != 302) {
+                log.warn("not 302, go on");
+                continue;
+            }
+
+            Header[] header = postResponse.getHeaders("Location");
+            String location = header[0].getValue();
+            HttpGet httpget = new HttpGet(location);
+            HttpResponse getResponse2 = this.getResponse(httpget);
+            httpget.releaseConnection();
+            log.warn("2nd " + getResponse2.toString());
+            if (getResponse2.getStatusLine().getStatusCode() != 200) {
+                log.warn("not 200, go on");
+                continue;
+            }
+            log.warn("successfully login!");
+            return;
         }
     }
 
     public File saveValidatePicture(String codePicUrl) {
         log.warn("enter getValidateCode");
         HttpGet getNewPicture = new HttpGet(codePicUrl);
-        try {
-            HttpResponse getResponse = httpClient.execute(getNewPicture);
-            HttpEntity httpEntity = getResponse.getEntity();
-            getNewPicture.releaseConnection();
+        HttpResponse getResponse = this.getResponse(getNewPicture);
+        HttpEntity httpEntity = getResponse.getEntity();
+        getNewPicture.releaseConnection();
 
-            byte[] b = new byte[1];
+        byte[] b = new byte[1];
+        try {
             DataInputStream di = new DataInputStream(httpEntity.getContent());
             File f = new File("codeImage.gif");
             FileOutputStream fo = new FileOutputStream(f);
@@ -297,14 +264,9 @@ public class CrawlZhiLian {
             di.close();
             fo.close();
             return f;
-        } catch (ConnectTimeoutException e5) {
-            log.error("ConnectTimeoutException in saveValidatePicture");
+        } catch (IOException e5) {
+            log.error(e5);
             return null;
-        } catch (Exception e) {
-            log.error(e);
-            return null;
-        } finally {
-            getNewPicture.releaseConnection();
         }
     }
 
@@ -336,7 +298,7 @@ public class CrawlZhiLian {
                 f2.delete();
                 f.delete();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e);
                 f.delete();
                 return null;
             }
