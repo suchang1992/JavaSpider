@@ -102,6 +102,7 @@ public class CrawlZhiLian {
 
         HttpResponse getResponse3 = httpClient.execute(getFirstPage);
         Document doc = Jsoup.parse(HttpUtils.getHtml(getResponse3));
+        getFirstPage.releaseConnection();
 
         String page = doc.select("#rd-resumelist-pageNum").first().text().split("/")[1];
 
