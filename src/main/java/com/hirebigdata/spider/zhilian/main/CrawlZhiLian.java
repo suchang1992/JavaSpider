@@ -48,7 +48,7 @@ public class CrawlZhiLian {
 
     CrawlZhiLian() {
         // 如果5秒还没有得到服务器的回复，则超时，然后重新发送
-        int timeout = 5 * 1000;
+        int timeout = 10 * 1000;
         RequestConfig.Builder builder = RequestConfig.custom();
         builder.setConnectionRequestTimeout(timeout);
         builder.setConnectTimeout(timeout);
@@ -70,9 +70,9 @@ public class CrawlZhiLian {
 //        keywords.add("lisp");
 //        keywords.add("ruby");
 //        keywords.add("linux");
-        keywords.add("css");
-        keywords.add("html");
-        keywords.add("js");
+//        keywords.add("css");
+//        keywords.add("html");
+//        keywords.add("js");
         keywords.add("javascript");
         keywords.add("web");
         keywords.add("后台");
@@ -93,7 +93,6 @@ public class CrawlZhiLian {
             log.info("start keyword: " + keyword);
             zhiLian.getResumeWithKeyword(keyword);
         }
-
     }
 
     public void getResumeWithKeyword(String keyword) throws Exception {
@@ -107,13 +106,26 @@ public class CrawlZhiLian {
         String page = doc.select("#rd-resumelist-pageNum").first().text().split("/")[1];
 
         int pageNum = Integer.parseInt(page);
-        List<RawResume> rawResumeListPage1 = processHttpGet(getFirstPage);
-        log.warn("process page 1");
-        Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
-                MongoConfig.collectionZhilianResume, rawResumeListPage1);
+        while (true){
+            try {
+                log.warn("process page 1");
+                List<RawResume> rawResumeListPage1 = processHttpGet(getFirstPage);
+                Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
+                        MongoConfig.collectionZhilianResume, rawResumeListPage1);
+                break;
+            } catch (ConnectTimeoutException e5) {
+                this.logout();
+                this.tryToLogin();
+                log.error("ConnectTimeoutException in getMoreResume");
+                continue;
+            } catch (SocketTimeoutException se) {
+                log.error("SocketTimeoutException in getMoreResume");
+                continue;
+            }
+        }
         getFirstPage.releaseConnection();
         try {
-            for (int i = 2; i <= pageNum; i++) {
+            for (int i = 15; i <= pageNum; i++) {
                 List<RawResume> rawResumeList = getMoreResume(keyword, i);
                 Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                         MongoConfig.collectionZhilianResume, rawResumeList);
@@ -129,7 +141,19 @@ public class CrawlZhiLian {
                 + URLEncoder.encode(keyword, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + page);
         getPages.setHeader("Referer", "http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
                 + URLEncoder.encode(keyword, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + (page - 1));
-        return processHttpGet(getPages);
+        while (true){
+            try {
+                return processHttpGet(getPages);
+            } catch (ConnectTimeoutException e5) {
+                this.logout();
+                this.tryToLogin();
+                log.error("ConnectTimeoutException in getMoreResume");
+                continue;
+            } catch (SocketTimeoutException se) {
+                log.error("SocketTimeoutException in getMoreResume");
+                continue;
+            }
+        }
     }
 
     public List<RawResume> processHttpGet(HttpGet getPage) throws Exception {
