@@ -73,9 +73,9 @@ public class CrawlZhiLian {
 //        keywords.add("css");
 //        keywords.add("html");
 //        keywords.add("js");
-        keywords.add("javascript");
-        keywords.add("web");
-        keywords.add("后台");
+//        keywords.add("javascript");
+//        keywords.add("web");
+//        keywords.add("后台");
         keywords.add("前端");
         keywords.add("安卓");
         keywords.add("android");
@@ -109,23 +109,21 @@ public class CrawlZhiLian {
         while (true){
             try {
                 log.warn("process page 1");
-                List<RawResume> rawResumeListPage1 = processHttpGet(getFirstPage);
+                List<RawResume> rawResumeListPage1 = processHttpGet(getFirstPage, keyword);
+                getFirstPage.releaseConnection();
                 Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                         MongoConfig.collectionZhilianResume, rawResumeListPage1);
                 break;
             } catch (ConnectTimeoutException e5) {
+                log.error("ConnectTimeoutException in getMoreResume");
                 this.logout();
                 this.tryToLogin();
-                log.error("ConnectTimeoutException in getMoreResume");
-                continue;
-            } catch (SocketTimeoutException se) {
-                log.error("SocketTimeoutException in getMoreResume");
                 continue;
             }
         }
         getFirstPage.releaseConnection();
         try {
-            for (int i = 15; i <= pageNum; i++) {
+            for (int i = 2; i <= pageNum; i++) {
                 List<RawResume> rawResumeList = getMoreResume(keyword, i);
                 Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                         MongoConfig.collectionZhilianResume, rawResumeList);
@@ -143,7 +141,7 @@ public class CrawlZhiLian {
                 + URLEncoder.encode(keyword, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + (page - 1));
         while (true){
             try {
-                return processHttpGet(getPages);
+                return processHttpGet(getPages, keyword);
             } catch (ConnectTimeoutException e5) {
                 this.logout();
                 this.tryToLogin();
@@ -156,7 +154,7 @@ public class CrawlZhiLian {
         }
     }
 
-    public List<RawResume> processHttpGet(HttpGet getPage) throws Exception {
+    public List<RawResume> processHttpGet(HttpGet getPage, String keyword) throws Exception {
         HttpResponse getResponse3 = httpClient.execute(getPage);
         Document doc = Jsoup.parse(HttpUtils.getHtml(getResponse3));
         getPage.releaseConnection();
@@ -167,13 +165,13 @@ public class CrawlZhiLian {
             RawResume rawResume = new RawResume();
             rawResume.setCvId(e.attr("tag"));
             rawResume.setLink(e.select("a").attr("href"));
+            rawResume.setKeyword(keyword);
             try {
                 while (true) {
                     Document resumeDoc;
                     try {
                         HttpGet getResumeHtml = new HttpGet(rawResume.getLink());
                         log.warn("           get resume of " + rawResume.getLink());
-                        log.warn("           get resume html in try");
                         // todo stop here
                         HttpResponse response = httpClient.execute(getResumeHtml);
                         String resumeHtml = HttpUtils.getHtml(response);
@@ -181,15 +179,11 @@ public class CrawlZhiLian {
                         getResumeHtml.releaseConnection();
                         resumeDoc = Jsoup.parse(resumeHtml);
                     } catch (ConnectTimeoutException e5) {
+                        log.error("ConnectTimeoutException in getting resume");
                         this.logout();
                         this.tryToLogin();
-                        log.error("ConnectTimeoutException in getting resume");
-                        continue;
-                    } catch (SocketTimeoutException se) {
-                        log.error("SocketTimeoutException in getting resume");
                         continue;
                     }
-                    log.warn("                     resume html got!");
                     if (resumeDoc.select("#resumeContentBody").first() != null) {
                         rawResume.setRawHtml(resumeDoc.select("#resumeContentBody").first().html());
                         break;
@@ -212,11 +206,9 @@ public class CrawlZhiLian {
                                     break;
                                 }
                             } catch (ConnectTimeoutException e5) {
+                                log.error("ConnectTimeoutException in validate code");
                                 this.logout();
                                 this.tryToLogin();
-                                log.error("ConnectTimeoutException in validate code");
-                            } catch (SocketTimeoutException se) {
-                                log.error("SocketTimeoutException in validate code");
                             }
                         }
                     }
