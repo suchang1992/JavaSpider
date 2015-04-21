@@ -11,6 +11,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -31,6 +32,7 @@ public class CompanyDetail extends ReflectionDBObject {
     String homepage = "";
     String introduction = "";
     String logo = "";
+    String crawled_time = "";
     List<KeyWithCrawledTime> stage = new ArrayList<>();
     List<KeyWithCrawledTime> size = new ArrayList<>();
     List<String> labels = new ArrayList<>();
@@ -50,6 +52,7 @@ public class CompanyDetail extends ReflectionDBObject {
         this.existedAlready = Helper.isExistInMongoDB(MyMongoClient.getMongoClient(),
                 MongoConfig.dbNameLagou, CompanyDetail.storeCollection,"Url", url);
         this.url = url;
+        this.crawled_time = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         if (this.existedAlready){
             BasicDBObject cmp = Helper.getDocumentFromMongo(MyMongoClient.getMongoClient(),
                     MongoConfig.dbNameLagou, CompanyDetail.storeCollection, "Url", url);
