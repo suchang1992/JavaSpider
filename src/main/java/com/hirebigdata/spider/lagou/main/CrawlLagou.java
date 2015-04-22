@@ -29,30 +29,24 @@ public class CrawlLagou implements Runnable {
     }
 
     private void crawl(){
-        int count = 0;
         try{
             DBCursor cursor = MyMongoClient.getMongoClient()
                     .getDB(MongoConfig.dbNameLagou)
                     .getCollection(MongoConfig.collectionLagouCompanyInList)
                     .find().skip(skip);
-            System.out.println("skip: " + skip);
             while (cursor.hasNext()){
                 DBObject companyInList = cursor.next();
                 CompanyDetail companyDetail =
                         new CompanyDetail(companyInList.get("Url").toString());
                 companyDetail.begin();
-
-                count++;
             }
         }catch (Exception e){
-            logger.error(e.getMessage() + ", the count is " + String.valueOf(count));
-            e.printStackTrace();
-            throw e;
+            logger.error(e);
         }
     }
 
     public static void main(String[] args){
-        int loadOnEveryThread = 1000;
+        int loadOnEveryThread = 5000;
         long totalCompany = MyMongoClient.getMongoClient().getDB(MongoConfig.dbNameLagou)
                 .getCollection(MongoConfig.collectionLagouCompanyInList).count();
         int threadCount = (int)(totalCompany / loadOnEveryThread);
@@ -65,11 +59,12 @@ public class CrawlLagou implements Runnable {
                 break;
             }
             lagouList.add(new CrawlLagou(i * loadOnEveryThread));
-            System.out.println("new skip: " + (i * loadOnEveryThread));
+            logger.info("new thread start from : " + (i * loadOnEveryThread));
         }
         for (int i=0; i<threadCount; i++){
             if (i*loadOnEveryThread > totalCompany){
                 Thread thread = new Thread(lagouList.get(i + 1));
+                thread.start();
                 break;
             }
             Thread thread = new Thread(lagouList.get(i));

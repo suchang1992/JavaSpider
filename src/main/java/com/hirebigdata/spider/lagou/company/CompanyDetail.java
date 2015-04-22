@@ -93,6 +93,7 @@ public class CompanyDetail extends ReflectionDBObject {
     }
 
     public void begin(){
+        log.info("start company " + this.url);
         String result = Helper.doGet(this.url);
         if (result == null || "".equals(result)){
             log.error("try max time doGet still failed at " + this.url);
