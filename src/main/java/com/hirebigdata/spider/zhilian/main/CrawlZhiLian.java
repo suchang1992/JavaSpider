@@ -142,7 +142,7 @@ public class CrawlZhiLian {
             while (true) {
                 Document resumeDoc;
                 HttpGet getResumeHtml = new HttpGet(rawResume.getLink());
-                log.warn("           get resume of " + rawResume.getLink());
+//                log.warn("           get resume of " + rawResume.getLink());
                 HttpResponse response = this.getResponse(getResumeHtml);
                 String resumeHtml = HttpUtils.getHtml(response);
                 // 不加这一句就只能获取两个简历文本
@@ -157,7 +157,7 @@ public class CrawlZhiLian {
                         break;
                     }
                     while (true) {
-                        log.warn("!!!!!! code appears !!!!!!.");
+//                        log.warn("!!!!!! code appears !!!!!!.");
                         String code = getValidateCode("http://rd2.zhaopin.com/s/loginmgr/" +
                                 "monitorvalidatingcode.asp?t=" + System.currentTimeMillis() / 1000L);
 
@@ -180,7 +180,7 @@ public class CrawlZhiLian {
         HttpGet logout = new HttpGet("http://rd2.zhaopin.com/s/loginmgr/logout.asp");
         HttpResponse response = this.getResponse(logout);
         logout.releaseConnection();
-        log.warn(response.toString());
+//        log.warn(response.toString());
         log.warn("logout");
     }
 
@@ -201,7 +201,7 @@ public class CrawlZhiLian {
 
     public void tryToLogin() {
         while (true) {
-            log.warn("prepare to login");
+//            log.warn("prepare to login");
             long nowTimeStamp = System.currentTimeMillis();
             long nowTime = nowTimeStamp / 1000;
             HttpPost httppost = new HttpPost(ZhiLianConfig.LOGIN_POST + "?DYWE="
@@ -225,10 +225,10 @@ public class CrawlZhiLian {
                 log.error(ue);
             }
             HttpResponse postResponse = this.getResponse(httppost);
-            log.warn("1st " + postResponse.toString());
+//            log.warn("1st " + postResponse.toString());
             httppost.releaseConnection();
             if (postResponse.getStatusLine().getStatusCode() != 302) {
-                log.warn("not 302, go on");
+//                log.warn("not 302, go on");
                 continue;
             }
 
@@ -237,9 +237,9 @@ public class CrawlZhiLian {
             HttpGet httpget = new HttpGet(location);
             HttpResponse getResponse2 = this.getResponse(httpget);
             httpget.releaseConnection();
-            log.warn("2nd " + getResponse2.toString());
+//            log.warn("2nd " + getResponse2.toString());
             if (getResponse2.getStatusLine().getStatusCode() != 200) {
-                log.warn("not 200, go on");
+//                log.warn("not 200, go on");
                 continue;
             }
             log.warn("successfully login!");
@@ -248,7 +248,7 @@ public class CrawlZhiLian {
     }
 
     public File saveValidatePicture(String codePicUrl) {
-        log.warn("enter getValidateCode");
+//        log.warn("enter getValidateCode");
         HttpGet getNewPicture = new HttpGet(codePicUrl);
         HttpResponse getResponse = this.getResponse(getNewPicture);
         HttpEntity httpEntity = getResponse.getEntity();
@@ -271,7 +271,7 @@ public class CrawlZhiLian {
     }
 
     public String getValidateCode(String codePicUrl) {
-        log.warn("enter getValidateCode");
+//        log.warn("enter getValidateCode");
         String line = "";
         while (line.length() < 4) {
             File f = saveValidatePicture(codePicUrl);
