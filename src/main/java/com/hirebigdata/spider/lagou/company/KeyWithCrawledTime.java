@@ -11,11 +11,12 @@ import java.util.Date;
  * Date: 2015/4/10
  */
 public class KeyWithCrawledTime extends ReflectionDBObject {
-    String crawled_time = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+    String crawled_time = "";
     String key = "";
 
     public KeyWithCrawledTime(String key){
         this.key = key;
+        this.crawled_time = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
     }
 
     public static KeyWithCrawledTime getKeyWithCrawledTimeFromBasicDBObject(BasicDBObject dbObject){

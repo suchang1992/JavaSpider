@@ -37,7 +37,7 @@ import org.jsoup.select.Elements;
  */
 public class CrawlZhiLian {
     HttpClient httpClient;
-    static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(CrawlZhiLian.class);
+    static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger("zhilian");
 
     CrawlZhiLian() {
         // 如果5秒还没有得到服务器的回复，则超时，然后重新发送

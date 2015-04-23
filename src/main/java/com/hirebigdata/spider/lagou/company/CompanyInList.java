@@ -16,7 +16,7 @@ import org.jsoup.select.Elements;
  * crawled
  */
 public class CompanyInList  extends ReflectionDBObject {
-    static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(CompanyInList.class);
+    static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger("lagou");
     String category = "";
     String name = "";
     String url = "";

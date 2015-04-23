@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class CrawlLagou implements Runnable {
     static org.apache.log4j.Logger logger =
-            org.apache.log4j.Logger.getLogger(CrawlLagou.class);
+            org.apache.log4j.Logger.getLogger("lagou");
 
     CrawlLagou(int skip){
         this.skip = skip;

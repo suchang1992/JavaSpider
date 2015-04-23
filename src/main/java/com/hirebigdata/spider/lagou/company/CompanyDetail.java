@@ -21,7 +21,7 @@ import java.util.*;
  * 503,451 positions, totally need 100,000 second, which is 27 hour, which is one day.
  */
 public class CompanyDetail extends ReflectionDBObject {
-    static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(CompanyDetail.class);
+    static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger("lagou");
     String url = "";
     String title = "";
     String fullname = "";
