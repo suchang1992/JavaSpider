@@ -3,6 +3,7 @@ package com.hirebigdata.spider.zhilian.main;
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.hirebigdata.spider.lagou.config.MongoConfig;
@@ -10,6 +11,7 @@ import com.hirebigdata.spider.lagou.utils.Helper;
 import com.hirebigdata.spider.lagou.utils.MyMongoClient;
 import com.hirebigdata.spider.zhilian.config.ZhiLianConfig;
 import com.hirebigdata.spider.zhilian.resume.RawResume;
+import com.hirebigdata.spider.zhilian.utils.AccessExcel;
 import com.hirebigdata.spider.zhilian.utils.HttpUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -54,42 +56,18 @@ public class CrawlZhiLian {
     public static void main(String[] args) throws Exception {
         CrawlZhiLian zhiLian = new CrawlZhiLian();
         zhiLian.tryToLogin();
-        List<String> keywords = new ArrayList<>();
-//        keywords.add("java");
-//        keywords.add("php");
-//        keywords.add("python");
-//        keywords.add("c/c++");
-//        keywords.add("lisp");
-//        keywords.add("ruby");
-//        keywords.add("linux");
-//        keywords.add("css");
-//        keywords.add("html");
-//        keywords.add("js");
-//        keywords.add("javascript");
-//        keywords.add("web");
-//        keywords.add("后台");
-//        keywords.add("前端");
-//        keywords.add("安卓");
-//        keywords.add("android");
-        keywords.add("服务器");
-        keywords.add("server");
-        keywords.add("研发");
-        keywords.add("开发");
-        keywords.add("负责");
-        keywords.add("认真");
-        keywords.add("外向");
-        keywords.add("端正");
-        keywords.add("漂亮");
-        keywords.add("积极");
-        for (String keyword : keywords) {
-            log.info("start keyword: " + keyword);
-            zhiLian.getResumeWithKeyword(keyword);
+        while (true) {
+            HashMap<String, String> keywordMap = AccessExcel.getRandomKeywords();
+            String bigWord = keywordMap.get("bigWord");
+            String smallWord = keywordMap.get("smallWord");
+            log.info("start keyword: " + bigWord + "[" + smallWord + "]");
+            zhiLian.getResumeWithKeyword(smallWord, bigWord);
         }
     }
 
-    public void getResumeWithKeyword(String keyword) throws Exception {
+    public void getResumeWithKeyword(String keywordToSearch, String keywordToStore) throws Exception {
         HttpGet getFirstPage = new HttpGet("http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
-                + URLEncoder.encode(keyword, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1");
+                + URLEncoder.encode(keywordToSearch, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1");
         getFirstPage.setHeader("Referer", "http://rdsearch.zhaopin.com/home/SearchByCustom");
 
         HttpResponse getResponse3 = this.getResponse(getFirstPage);
@@ -101,7 +79,7 @@ public class CrawlZhiLian {
         int pageNum = Integer.parseInt(page);
         while (true) {
             log.warn("process page 1");
-            List<RawResume> rawResumeListPage1 = processHttpGet(getFirstPage, keyword);
+            List<RawResume> rawResumeListPage1 = processHttpGet(getFirstPage, keywordToStore);
             getFirstPage.releaseConnection();
             Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                     MongoConfig.collectionZhilianResume, rawResumeListPage1);
@@ -110,7 +88,7 @@ public class CrawlZhiLian {
         getFirstPage.releaseConnection();
         try {
             for (int i = 2; i <= pageNum; i++) {
-                List<RawResume> rawResumeList = getMoreResume(keyword, i);
+                List<RawResume> rawResumeList = getMoreResume(keywordToSearch, i, keywordToStore);
                 Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                         MongoConfig.collectionZhilianResume, rawResumeList);
             }
@@ -119,16 +97,16 @@ public class CrawlZhiLian {
         }
     }
 
-    public List<RawResume> getMoreResume(String keyword, int page) throws Exception {
+    public List<RawResume> getMoreResume(String keywordToSearch, int page, String keywordToStore) throws Exception {
         log.warn("process page " + page);
         HttpGet getPages = new HttpGet("http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
-                + URLEncoder.encode(keyword, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + page);
+                + URLEncoder.encode(keywordToSearch, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + page);
         getPages.setHeader("Referer", "http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
-                + URLEncoder.encode(keyword, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + (page - 1));
-        return processHttpGet(getPages, keyword);
+                + URLEncoder.encode(keywordToSearch, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1&pageIndex=" + (page - 1));
+        return processHttpGet(getPages, keywordToStore);
     }
 
-    public List<RawResume> processHttpGet(HttpGet getPage, String keyword) {
+    public List<RawResume> processHttpGet(HttpGet getPage, String keywordToStore) {
         HttpResponse getResponse3 = this.getResponse(getPage);
         Document doc = Jsoup.parse(HttpUtils.getHtml(getResponse3));
         getPage.releaseConnection();
@@ -138,7 +116,7 @@ public class CrawlZhiLian {
             RawResume rawResume = new RawResume();
             rawResume.setCvId(e.attr("tag"));
             rawResume.setLink(e.select("a").attr("href"));
-            rawResume.setKeyword(keyword);
+            rawResume.setKeyword(keywordToStore);
             while (true) {
                 Document resumeDoc;
                 HttpGet getResumeHtml = new HttpGet(rawResume.getLink());

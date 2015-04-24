@@ -6,8 +6,7 @@ import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -17,14 +16,66 @@ import java.util.*;
 public class AccessExcel {
     final public static boolean CONTAIN_BIG_WORD = true;
     final public static boolean NOT_CONTAIN_BIG_WORD = false;
+    final public static String KEYWORDS_IN_EXCEL = "keywords.xls";
+    final public static String CRAWLED_KEYWORDS = "keywords.txt";
 
     public static void main(String[] args) {
-//        System.out.println(getBigWords("keywords.xls"));
-//        System.out.println(getSmallWords("keywords.xls", 16, CONTAIN_BIG_WORD).size());
+//        System.out.println(getBigWords(KEYWORDS_IN_EXCEL));
+//        System.out.println(getSmallWords(KEYWORDS_IN_EXCEL, 16, CONTAIN_BIG_WORD).size());
 //        while (true)
-//        System.out.println(getRandomKeywords("keywords.xls"));
-        System.out.println(getRandomKeywords("keywords.xls", "战略"));
+        System.out.println(getRandomKeywords(KEYWORDS_IN_EXCEL));
+//        System.out.println(getRandomKeywords(KEYWORDS_IN_EXCEL, "战略"));
+//        writeToFile("战略");
+//        System.out.println(existInCrawledFile("战略2"));
+    }
 
+    public static boolean existInCrawledFile(String smallWord) {
+        try {
+            File file = new File(CRAWLED_KEYWORDS);
+            FileReader fileReader = new FileReader(file.getName());
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            while (true) {
+                String temp = bufferedReader.readLine();
+                if (temp == null)
+                    break;
+                if (smallWord.equals(temp))
+                    return true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static void writeToFile(String bigWords) {
+        try {
+            File file = new File(CRAWLED_KEYWORDS);
+            //if file doesn't exists, then create it
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            //true = append file
+            FileWriter fileWritter = new FileWriter(file.getName(), true);
+            BufferedWriter bufferWritter = new BufferedWriter(fileWritter);
+            bufferWritter.write(bigWords + "\n");
+            bufferWritter.close();
+            System.out.println("Done");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static HashMap<String, String> getRandomKeywords() {
+        while (true){
+            HashMap<String, String> map = getRandomKeywords(KEYWORDS_IN_EXCEL);
+            String bigWord = map.keySet().iterator().next();
+            String smallWord = map.get(bigWord);
+            if (!existInCrawledFile(smallWord)){
+                writeToFile(map.get("smallWord"));
+                return map;
+            }
+        }
     }
 
     public static HashMap<String, String> getRandomKeywords(String filePath, String bigWord) {
@@ -32,7 +83,9 @@ public class AccessExcel {
         List<String> bigWords = getBigWords(filePath);
         int index = bigWords.indexOf(bigWord);
         List<String> smallWords = getSmallWords(filePath, index, CONTAIN_BIG_WORD);
-        result.put(bigWord, smallWords.get(new Random().nextInt(smallWords.size())));
+        result.put("bigWord", bigWord);
+        result.put("smallWord", smallWords.get(new Random().nextInt(smallWords.size())));
+//        result.put(bigWord, smallWords.get(new Random().nextInt(smallWords.size())));
         return result;
     }
 
@@ -45,7 +98,9 @@ public class AccessExcel {
             keywords.put(bigWords.get(i), smallWords);
         }
         int j = new Random().nextInt(bigWords.size());
-        result.put(bigWords.get(j), keywords.get(bigWords.get(j)).get(new Random().nextInt(keywords.get(bigWords.get(j)).size())));
+        result.put("bigWord", bigWords.get(j));
+        result.put("smallWord", keywords.get(bigWords.get(j)).get(new Random().nextInt(keywords.get(bigWords.get(j)).size())));
+//        result.put(bigWords.get(j), keywords.get(bigWords.get(j)).get(new Random().nextInt(keywords.get(bigWords.get(j)).size())));
         return result;
     }
 
