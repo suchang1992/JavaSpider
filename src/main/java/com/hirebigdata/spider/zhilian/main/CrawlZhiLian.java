@@ -117,6 +117,11 @@ public class CrawlZhiLian {
             rawResume.setCvId(e.attr("tag"));
             rawResume.setLink(e.select("a").attr("href"));
             rawResume.setKeyword(keywordToStore);
+            if (Helper.isExistInMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
+                    MongoConfig.collectionZhilianResume, "CvId", e.attr("tag"))){
+                log.info("resume already exist in db, " + e.attr("tag"));
+                continue;
+            }
             while (true) {
                 Document resumeDoc;
                 HttpGet getResumeHtml = new HttpGet(rawResume.getLink());
