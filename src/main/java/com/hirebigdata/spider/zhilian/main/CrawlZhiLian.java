@@ -54,6 +54,10 @@ public class CrawlZhiLian {
     }
 
     public static void main(String[] args) throws Exception {
+        CrawlZhiLian.getResumeByKeyword();
+    }
+
+    public static void getResumeByKeyword(){
         CrawlZhiLian zhiLian = new CrawlZhiLian();
         zhiLian.tryToLogin();
         while (true) {
@@ -61,11 +65,16 @@ public class CrawlZhiLian {
             String bigWord = keywordMap.get("bigWord");
             String smallWord = keywordMap.get("smallWord");
             log.info("start keyword: " + bigWord + "[" + smallWord + "]");
-            zhiLian.getResumeWithKeyword(smallWord, bigWord);
+            try {
+                zhiLian.getResumeWithKeyword(smallWord, bigWord);
+            }catch (UnsupportedEncodingException e){
+                log.error(e);
+            }
         }
     }
 
-    public void getResumeWithKeyword(String keywordToSearch, String keywordToStore) throws Exception {
+    public void getResumeWithKeyword(String keywordToSearch, String keywordToStore)
+            throws UnsupportedEncodingException {
         HttpGet getFirstPage = new HttpGet("http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
                 + URLEncoder.encode(keywordToSearch, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1");
         getFirstPage.setHeader("Referer", "http://rdsearch.zhaopin.com/home/SearchByCustom");
@@ -113,50 +122,57 @@ public class CrawlZhiLian {
         Elements resumes = doc.select(".info");
         List<RawResume> rawResumeList = new ArrayList<>();
         for (Element e : resumes) {
-            RawResume rawResume = new RawResume();
-            rawResume.setCvId(e.attr("tag"));
-            rawResume.setLink(e.select("a").attr("href"));
-            rawResume.setKeyword(keywordToStore);
-            if (Helper.isExistInMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
-                    MongoConfig.collectionZhilianResume, "CvId", e.attr("tag"))){
-                log.info("resume already exist in db, " + e.attr("tag"));
-                continue;
-            }
-            while (true) {
-                Document resumeDoc;
-                HttpGet getResumeHtml = new HttpGet(rawResume.getLink());
-//                log.warn("           get resume of " + rawResume.getLink());
-                HttpResponse response = this.getResponse(getResumeHtml);
-                String resumeHtml = HttpUtils.getHtml(response);
-                // 不加这一句就只能获取两个简历文本
-                getResumeHtml.releaseConnection();
-                resumeDoc = Jsoup.parse(resumeHtml);
-                if (resumeDoc.select("#resumeContentBody").first() != null) {
-                    rawResume.setRawHtml(resumeDoc.select("#resumeContentBody").first().html());
-                    break;
-                } else {
-                    if (resumeDoc.select("#resumeContentHead").first() != null) {
-                        log.warn("resume deleted " + rawResume.getCvId());
-                        break;
-                    }
-                    while (true) {
-//                        log.warn("!!!!!! code appears !!!!!!.");
-                        String code = getValidateCode("http://rd2.zhaopin.com/s/loginmgr/" +
-                                "monitorvalidatingcode.asp?t=" + System.currentTimeMillis() / 1000L);
+            RawResume rawResume = getRawResume(e, keywordToStore);
+            if (rawResume != null)
+                rawResumeList.add(rawResume);
+        }
+        return rawResumeList;
+    }
 
-                        HttpPost codePost = new HttpPost(ZhiLianConfig.CHECK_VALIDATING_CODE + code);
-                        HttpResponse codeResponse = this.getResponse(codePost);
-                        String result = Helper.getHtml(codeResponse);
-                        codePost.releaseConnection();
-                        if ("true".equals(result)) {
-                            break;
-                        }
+    public RawResume getRawResume(Element e, String keywordToStore){
+        RawResume rawResume = new RawResume();
+        rawResume.setCvId(e.attr("tag"));
+        rawResume.setLink(e.select("a").attr("href"));
+        rawResume.setKeyword(keywordToStore);
+        if (Helper.isExistInMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
+                MongoConfig.collectionZhilianResume, "CvId", e.attr("tag"))){
+            log.info("resume already exist in db, " + e.attr("tag"));
+            return null;
+        }
+        while (true) {
+            Document resumeDoc;
+            HttpGet getResumeHtml = new HttpGet(rawResume.getLink());
+//                log.warn("           get resume of " + rawResume.getLink());
+            HttpResponse response = this.getResponse(getResumeHtml);
+            String resumeHtml = HttpUtils.getHtml(response);
+            // 不加这一句就只能获取两个简历文本
+            getResumeHtml.releaseConnection();
+            resumeDoc = Jsoup.parse(resumeHtml);
+            if (resumeDoc.select("#resumeContentBody").first() != null) {
+                rawResume.setRawHtml(resumeDoc.select("#resumeContentBody").first().html());
+                return rawResume;
+//                break;
+            } else {
+                if (resumeDoc.select("#resumeContentHead").first() != null) {
+                    log.warn("resume deleted " + rawResume.getCvId());
+                    return null;
+//                    break;
+                }
+                while (true) {
+//                        log.warn("!!!!!! code appears !!!!!!.");
+                    String code = getValidateCode("http://rd2.zhaopin.com/s/loginmgr/" +
+                            "monitorvalidatingcode.asp?t=" + System.currentTimeMillis() / 1000L);
+
+                    HttpPost codePost = new HttpPost(ZhiLianConfig.CHECK_VALIDATING_CODE + code);
+                    HttpResponse codeResponse = this.getResponse(codePost);
+                    String result = Helper.getHtml(codeResponse);
+                    codePost.releaseConnection();
+                    if ("true".equals(result)) {
+                        break;
                     }
                 }
             }
-            rawResumeList.add(rawResume);
         }
-        return rawResumeList;
     }
 
     public void logout() {
