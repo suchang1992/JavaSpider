@@ -14,4 +14,5 @@ public class MongoConfig {
     public static final String collectionLagouCompanyDetailV2 = "CompanyDetailV2";
     public static final String collectionLagouCompanyDetailV3 = "CompanyDetailV3";
     public static final String collectionZhilianResume = "ZhilianResumeCount";
+    public static final String collectionZhilianContactResume = "ZhilianContactResume";
 }
