@@ -29,6 +29,18 @@
             <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} %m -%-5p %l%n"/>
         </layout>
     </appender>
+    <appender name="rollingFile" class="org.apache.log4j.RollingFileAppender">
+        <param name="MaxFileSize" value="10MB"/>
+        <param name="File" value="rolling.log" />
+        <param name="MaxBackupIndex" value="50" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} %m -%-5p %l%n"/>
+        </layout>
+    </appender>
+
+    <logger name="rollingFile">
+        <appender-ref ref="rollingFile"/>
+    </logger>
 
     <logger name="zhilian">
         <appender-ref ref="zhilian"/>
