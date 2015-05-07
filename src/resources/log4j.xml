@@ -37,6 +37,17 @@
             <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} %m -%-5p %l%n"/>
         </layout>
     </appender>
+    <appender name="dailyRollingFile" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="File" value="daily.log" />
+        <param name="DatePattern" value=".yyyy-MM-dd" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} %m -%-5p %l%n"/>
+        </layout>
+    </appender>
+
+    <logger name="dailyRollingFile">
+        <appender-ref ref="dailyRollingFile"/>
+    </logger>
 
     <logger name="rollingFile">
         <appender-ref ref="rollingFile"/>
