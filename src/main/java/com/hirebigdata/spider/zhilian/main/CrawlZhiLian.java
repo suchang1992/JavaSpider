@@ -43,6 +43,8 @@ public class CrawlZhiLian {
     static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger("zhilian");
     String username = "";
     String password = "";
+    int sleepSeconds = 0;
+    int count = 0;
 
     CrawlZhiLian(String username, String password){
         this.username = username;
@@ -59,18 +61,28 @@ public class CrawlZhiLian {
     }
 
     public static void main(String[] args) throws Exception {
-        CrawlZhiLian.getResumeByKeyword();
+        if (args.length == 0){
+            // sleep 10 seconds at each request will just used all 4W chance to check resume
+            CrawlZhiLian.getResumeByKeyword("qzw59483132q", "shuzhilian82140078", "keywords2.xls", 20);
+//            CrawlZhiLian.getResumeByKeyword("id68657002vj", "tcsl1402", "keywords2.xls", 10);
+        }
+        else
+            CrawlZhiLian.getResumeByKeyword(args[0], args[1], args[2], Integer.parseInt(args[3]));
+
+//
         // 已下载
 //        CrawlZhiLian.getResumeByCvId("JS139767110R90250002000", "jiri59483132", "linxiaohua87860519");
         // 未下载
 //        CrawlZhiLian.getResumeByCvId("", "jiri59483132", "linxiaohua87860519");
     }
 
-    public static void getResumeByKeyword(){
-        CrawlZhiLian zhiLian = new CrawlZhiLian("jiri59483132", "linxiaohua87860519");
+    public static void getResumeByKeyword(String username, String password, String keywordFile, int sleepSeconds){
+        CrawlZhiLian zhiLian = new CrawlZhiLian(username, password);
+        if (sleepSeconds != 0)
+            zhiLian.sleepSeconds = sleepSeconds;
         zhiLian.tryToLogin();
         while (true) {
-            HashMap<String, String> keywordMap = AccessExcel.getRandomKeywords();
+            HashMap<String, String> keywordMap = AccessExcel.getRandomKeywords(keywordFile);
             String bigWord = keywordMap.get("bigWord");
             String smallWord = keywordMap.get("smallWord");
             log.info("start keyword: " + bigWord + "[" + smallWord + "]");
@@ -168,6 +180,8 @@ public class CrawlZhiLian {
             getFirstPage.releaseConnection();
             Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                     MongoConfig.collectionZhilianResume, rawResumeListPage1);
+            this.count += rawResumeListPage1.size();
+            log.info("count: " + this.count);
             break;
         }
         getFirstPage.releaseConnection();
@@ -176,6 +190,8 @@ public class CrawlZhiLian {
                 List<RawResume> rawResumeList = getMoreResume(keywordToSearch, i, keywordToStore);
                 Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                         MongoConfig.collectionZhilianResume, rawResumeList);
+                this.count += rawResumeList.size();
+                log.info("count: " + this.count);
             }
         } catch (Exception e) {
             log.error("page " + page, e);
@@ -262,12 +278,15 @@ public class CrawlZhiLian {
     public HttpResponse getResponse(HttpRequestBase requestBase) {
         while (true) {
             try {
+                Thread.sleep(1000 * this.sleepSeconds);
                 HttpResponse response = httpClient.execute(requestBase);
                 return response;
             } catch (ConnectTimeoutException e5) {
                 log.error("ConnectTimeoutException in getResponse");
                 this.logout();
                 this.tryToLogin();
+            } catch (InterruptedException ite) {
+                log.error(ite);
             } catch (IOException ioe) {
                 log.error(ioe);
             }
