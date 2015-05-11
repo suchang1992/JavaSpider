@@ -1,4 +1,5 @@
 package com.hirebigdata.spider.zhihu.utils;
+
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -30,12 +31,14 @@ public class GetCookies {
 
     public CookieStore cs = new BasicCookieStore();
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         GetCookies zhihu = new GetCookies();
         String _xsrf = zhihu.getXsrf("http://www.zhihu.com");
         HashMap<String, String> zhihuFormData = new HashMap<String, String>();
-        zhihuFormData.put("email", "jianguo.bai@hirebigdata.cn");
-        zhihuFormData.put("password", "wsc111111");
+//        zhihuFormData.put("email", "jianguo.bai@hirebigdata.cn");
+//        zhihuFormData.put("password", "wsc111111");
+        zhihuFormData.put("email", "524471505@qq.com");
+        zhihuFormData.put("password", "a12345678");
         zhihuFormData.put("_xsrf", _xsrf);
         zhihu.doPost(
                 "http://www.zhihu.com/login",
@@ -48,20 +51,30 @@ public class GetCookies {
         zhihu.doGet("http://www.zhihu.com/logout");
     }
 
-    public String getXsrf(String url){
+    public String login() {
+        String _xsrf = getXsrf("http://www.zhihu.com");
+        HashMap<String, String> zhihuFormData = new HashMap<String, String>();
+        zhihuFormData.put("email", "jianguo.bai@hirebigdata.cn");
+        zhihuFormData.put("password", "wsc111111");
+        zhihuFormData.put("_xsrf", _xsrf);
+        doPost("http://www.zhihu.com/login", zhihuFormData);
+        return getLoginCookie();
+    }
+
+    public String getXsrf(String url) {
         HttpClient client = HttpClientBuilder.create().build();
         HttpGet request = new HttpGet(url);
         try {
             HttpResponse response = client.execute(request);
             Document doc = Jsoup.parse(getHtml(response));
             return doc.getElementsByAttributeValue("name", "_xsrf").get(0).attr("value").toString();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public String doGet(String url){
+    public String doGet(String url) {
         HttpClient client = HttpClientBuilder.create().build();
         HttpGet request = new HttpGet(url);
         try {
@@ -70,7 +83,7 @@ public class GetCookies {
             updateCookie(response);
 
             return getHtml(response);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -87,7 +100,7 @@ public class GetCookies {
             while ((line = rd.readLine()) != null) {
                 result.append(line);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -124,7 +137,7 @@ public class GetCookies {
         }
     }
 
-    public String getLoginCookie(){
+    public String getLoginCookie() {
         String cookieStr = "";
         List<Cookie> list = cs.getCookies();
         for (Cookie cookie : list) {
@@ -141,7 +154,7 @@ public class GetCookies {
         request.setEntity(new UrlEncodedFormEntity(formData, HTTP.DEF_CONTENT_CHARSET));
     }
 
-    public String doPost(String url, HashMap<String, String> formData){
+    public String doPost(String url, HashMap<String, String> formData) {
         HttpClient client = HttpClientBuilder.create().build();
         HttpPost request = new HttpPost(url);
 
@@ -153,7 +166,7 @@ public class GetCookies {
             updateCookie(response);
 
             return getHtml(response);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
