@@ -1,5 +1,6 @@
 package com.hirebigdata.spider.zhihu.main;
 
+import com.hirebigdata.spider.zhihu.utils.GetCookies;
 import com.hirebigdata.spider.zhihu.utils.Mongo;
 
 import java.text.Format;
@@ -19,13 +20,13 @@ public class Main {
         String uid = "";
         String ret = "";
         System.out.println("start");
-
+        String cookie = new GetCookies().login();
         try {
             while (true) {
                 uid = new Mongo().getUserid(DBname, "zhihu_user_data_ids");
                 new Mongo().startCrawl(DBname, "zhihu_user_data_ids", uid);//开始爬取
                 System.out.print(count + ":" + uid);
-                ret = new Spider().spiderContent(uid);
+                ret = new Spider(cookie).spiderContent(uid);
                 if (ret.equals("success")) {
                     new Mongo().finishCrawl(DBname, "zhihu_user_data_ids", uid);//完成爬取
                 } else {

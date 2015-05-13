@@ -20,6 +20,22 @@ import java.util.concurrent.*;
 public class Spider {
     private static Map<String, String> header = new HashMap<String, String>();
 
+    public Spider(String cookie) {
+        header.put("Origin", "http://www.zhihu.com");
+        header.put("Host", "www.zhihu.com");
+        header.put("Connection", "keep-alive");
+        header.put("Accept-Encoding", "gzip,deflate,sdch");
+        header.put("Referer", "http://www.zhihu.com/people/fenng/followees");
+        // header.put("Content-Type",
+        // "application/x-www-form-urlencoded; charset=UTF-8");
+        header.put("Accept", "gzip, deflate");
+        header.put("Accept-Language", "	zh-cn,zh;q=0.8,en-us;q=0.5,en;q=0.3");
+        header.put("User-Agent",
+                "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0");
+        // header.put("X-Requested-With", "XMLHttpRequest");
+        header.put("cookie", cookie);
+    }
+
     public String spiderContent(String UID) throws MongoException{
         ZhihuUser user = new ZhihuUser();
         //第一步 访问了 www.zhihu.com/people/uid
@@ -44,7 +60,7 @@ public class Spider {
                 pool.submit(new CallableUserColumn(user.getUser_data_id(), user.getUrl_name()));
             int f_count = Integer.parseInt(user.getFollower_count());
             int c = f_count/20 + 1;//followers的页数
-            c = c >= 1500 ? 1500 : c;
+            c = c >= 3000 ? 3000 : c;
 //            System.out.println(c);
             FutureTask<ZhihuUserFollower>[] followersTasks = new FutureTask[c];
             if(array[4]>=1){
@@ -225,24 +241,9 @@ public class Spider {
     }
 
     public static Map<String, String> getHeader() {
-        header.put("Origin", "http://www.zhihu.com");
-        header.put("Host", "www.zhihu.com");
-        header.put("Connection", "keep-alive");
-        header.put("Accept-Encoding", "gzip,deflate,sdch");
-        header.put("Referer", "http://www.zhihu.com/people/fenng/followees");
-        // header.put("Content-Type",
-        // "application/x-www-form-urlencoded; charset=UTF-8");
-        header.put("Accept", "gzip, deflate");
-        header.put("Accept-Language", "	zh-cn,zh;q=0.8,en-us;q=0.5,en;q=0.3");
-        header.put(
-                "cookie",
-                "   q_c1=ccfd92e359e54617a0ff06a03ca42b92|1424831386000|1421637754000; __utma=51854390.879657291.1421637754.1424831367.1427164906.3; __utmz=51854390.1421637754.1.1.utmcsr=zhihu.com|utmccn=(referral)|utmcmd=referral|utmcct=/; __utmv=51854390.100--|2=registration_date=20150104=1^3=entry_date=20150104=1; _xsrf=3968f17621eeb31ce6ac15848765bf99; __utmb=51854390.5.10.1427164906; __utmc=51854390; z_c0=\"QUFDQWdQcEdBQUFYQUFBQVlRSlZUZk5iT0ZWZTh2ME01bjhZa0RWY3A2eE5DWnMtUi1TSUxnPT0=|1427164915|ed3101705eb2be2f7c24e05d48faa0b31e0e01fb\"");
-        header.put("User-Agent",
-                "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0");
-        // header.put("X-Requested-With", "XMLHttpRequest");
-
         return header;
     }
+
 
 
 }
