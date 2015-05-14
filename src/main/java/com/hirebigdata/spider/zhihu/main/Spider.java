@@ -20,6 +20,8 @@ import java.util.concurrent.*;
 public class Spider {
     private static Map<String, String> header = new HashMap<String, String>();
 
+    public Spider(){}
+
     public Spider(String cookie) {
         header.put("Origin", "http://www.zhihu.com");
         header.put("Host", "www.zhihu.com");
