@@ -5,6 +5,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import com.hirebigdata.spider.lagou.config.MongoConfig;
 import com.hirebigdata.spider.lagou.utils.Helper;
@@ -44,6 +45,7 @@ public class CrawlZhiLian {
     String username = "";
     String password = "";
     int sleepSeconds = 0;
+    int switchCount = 0;
     int count = 0;
 
     CrawlZhiLian(String username, String password){
@@ -63,8 +65,7 @@ public class CrawlZhiLian {
     public static void main(String[] args) throws Exception {
         if (args.length == 0){
             // sleep 10 seconds at each request will just used all 4W chance to check resume
-            CrawlZhiLian.getResumeByKeyword("qzw59483132q", "shuzhilian82140078", "keywords2.xls", 20);
-//            CrawlZhiLian.getResumeByKeyword("id68657002vj", "tcsl1402", "keywords2.xls", 10);
+            CrawlZhiLian.getResumeByKeyword("qzw59483132q", "shuzhilian82140078", "keywords2.xls", 2);
         }
         else
             CrawlZhiLian.getResumeByKeyword(args[0], args[1], args[2], Integer.parseInt(args[3]));
@@ -180,8 +181,7 @@ public class CrawlZhiLian {
             getFirstPage.releaseConnection();
             Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                     MongoConfig.collectionZhilianResume, rawResumeListPage1);
-            this.count += rawResumeListPage1.size();
-            log.info("count: " + this.count);
+            statisticAndSwitch(rawResumeListPage1.size());
             break;
         }
         getFirstPage.releaseConnection();
@@ -190,11 +190,49 @@ public class CrawlZhiLian {
                 List<RawResume> rawResumeList = getMoreResume(keywordToSearch, i, keywordToStore);
                 Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                         MongoConfig.collectionZhilianResume, rawResumeList);
-                this.count += rawResumeList.size();
-                log.info("count: " + this.count);
+                statisticAndSwitch(rawResumeList.size());
             }
         } catch (Exception e) {
             log.error("page " + page, e);
+        }
+    }
+
+    public void statisticAndSwitch(int growth){
+        this.count += growth;
+        log.info("count: " + this.count + ", switchCount: " + this.switchCount);
+        if (this.count > 1000){
+            this.count = 0;
+            this.switchCount++;
+            this.logout();
+            ArrayList<HashMap<String, String>> accounts = new ArrayList<>();
+            try {
+                File file = new File("zhilianAccounts.txt");
+                InputStreamReader read = new InputStreamReader(
+                        new FileInputStream(file));
+                BufferedReader bufferedReader = new BufferedReader(read);
+                String lineTxt = null;
+                while((lineTxt = bufferedReader.readLine()) != null){
+                    String[] ts = lineTxt.split(";");
+                    HashMap<String, String> account = new HashMap<>();
+                    account.put("account", ts[0]);
+                    account.put("password", ts[1]);
+                    accounts.add(account);
+                }
+                read.close();
+            }catch (Exception e){
+                log.error(e);
+            }
+            while (true){
+                int index = new Random().nextInt(accounts.size());
+                String accountName = accounts.get(index).get("account");
+                String password = accounts.get(index).get("password");
+                if (this.username.equals(accountName))
+                    continue;
+                this.username = accountName;
+                this.password = password;
+                break;
+            }
+            this.tryToLogin();
         }
     }
 
@@ -228,7 +266,7 @@ public class CrawlZhiLian {
         rawResume.setKeyword(keywordToStore);
         if (Helper.isExistInMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                 MongoConfig.collectionZhilianResume, "CvId", e.attr("tag"))){
-            log.info("resume already exist in db, " + e.attr("tag"));
+            log.info("exist");
             return null;
         }
         while (true) {
@@ -336,7 +374,7 @@ public class CrawlZhiLian {
 //                log.warn("not 200, go on");
                 continue;
             }
-            log.warn("successfully login!");
+            log.warn("successfully login with " + this.username);
             return;
         }
     }
