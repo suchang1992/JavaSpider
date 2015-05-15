@@ -3,6 +3,11 @@
 *.iws
 target/
 *.log
+*.log.*
+*.exe
+*.zip
+*.txt
+*.xls
 process.log*
 data/
 *.gif

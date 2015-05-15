@@ -5,11 +5,13 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import com.hirebigdata.spider.lagou.config.MongoConfig;
 import com.hirebigdata.spider.lagou.utils.Helper;
 import com.hirebigdata.spider.lagou.utils.MyMongoClient;
 import com.hirebigdata.spider.zhilian.config.ZhiLianConfig;
+import com.hirebigdata.spider.zhilian.resume.ContactResume;
 import com.hirebigdata.spider.zhilian.resume.RawResume;
 import com.hirebigdata.spider.zhilian.utils.AccessExcel;
 import com.hirebigdata.spider.zhilian.utils.HttpUtils;
@@ -40,10 +42,17 @@ import org.jsoup.select.Elements;
 public class CrawlZhiLian {
     HttpClient httpClient;
     static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger("zhilian");
+    String username = "";
+    String password = "";
+    int sleepSeconds = 0;
+    int switchCount = 0;
+    int count = 0;
 
-    CrawlZhiLian() {
-        // 如果5秒还没有得到服务器的回复，则超时，然后重新发送
-        int timeout = 10 * 1000;
+    CrawlZhiLian(String username, String password){
+        this.username = username;
+        this.password = password;
+        // 如果50秒还没有得到服务器的回复，则超时，然后重新发送
+        int timeout = 50 * 1000;
         RequestConfig.Builder builder = RequestConfig.custom();
         builder.setConnectionRequestTimeout(timeout);
         builder.setConnectTimeout(timeout);
@@ -54,18 +63,107 @@ public class CrawlZhiLian {
     }
 
     public static void main(String[] args) throws Exception {
-        CrawlZhiLian zhiLian = new CrawlZhiLian();
+        if (args.length == 0){
+            // sleep 10 seconds at each request will just used all 4W chance to check resume
+            CrawlZhiLian.getResumeByKeyword("qzw59483132q", "shuzhilian82140078", "keywords2.xls", 2);
+        }
+        else
+            CrawlZhiLian.getResumeByKeyword(args[0], args[1], args[2], Integer.parseInt(args[3]));
+
+//
+        // 已下载
+//        CrawlZhiLian.getResumeByCvId("JS139767110R90250002000", "jiri59483132", "linxiaohua87860519");
+        // 未下载
+//        CrawlZhiLian.getResumeByCvId("", "jiri59483132", "linxiaohua87860519");
+    }
+
+    public static void getResumeByKeyword(String username, String password, String keywordFile, int sleepSeconds){
+        CrawlZhiLian zhiLian = new CrawlZhiLian(username, password);
+        if (sleepSeconds != 0)
+            zhiLian.sleepSeconds = sleepSeconds;
         zhiLian.tryToLogin();
         while (true) {
-            HashMap<String, String> keywordMap = AccessExcel.getRandomKeywords();
+            HashMap<String, String> keywordMap = AccessExcel.getRandomKeywords(keywordFile);
             String bigWord = keywordMap.get("bigWord");
             String smallWord = keywordMap.get("smallWord");
             log.info("start keyword: " + bigWord + "[" + smallWord + "]");
-            zhiLian.getResumeWithKeyword(smallWord, bigWord);
+            try {
+                zhiLian.getResumeWithKeyword(smallWord, bigWord);
+            }catch (UnsupportedEncodingException e){
+                log.error(e);
+            }
         }
     }
 
-    public void getResumeWithKeyword(String keywordToSearch, String keywordToStore) throws Exception {
+    public static ContactResume getResumeByCvId(String CvId, String username, String password){
+        if (CvId.contains("_")){
+            CvId = CvId.split("_")[0];
+        }
+        CrawlZhiLian zhiLian = new CrawlZhiLian(username, password);
+        zhiLian.tryToLogin();
+        while (true){
+            String url = "http://rd.zhaopin.com/resumepreview/resume/viewone/2/" +
+                    CvId + "_1_1?searchresume=1";
+            HttpGet resumeGet = new HttpGet(url);
+            HttpResponse resumeRes = zhiLian.getResponse(resumeGet);
+            String resume = HttpUtils.getHtml(resumeRes);
+            resumeGet.releaseConnection();
+            Document doc = Jsoup.parse(resume);
+            Element userName = doc.getElementById("userName");
+            ContactResume contactResume = new ContactResume();
+            contactResume.setCvId(CvId);
+            contactResume.setRawHtml(doc.select("#resumeContentBody").first().html());
+            contactResume.setKeyword("");
+            contactResume.setLink(url);
+            if (userName != null){
+                // 已下载
+                System.out.println(userName);
+                contactResume.setName(userName.text());
+                contactResume.setContact(doc.select(".summary-bottom").first().text());
+                return contactResume;
+            }else {
+                zhiLian.downloadResume(CvId, "name");
+            }
+        }
+    }
+
+    public void downloadResume(String CvId, String resumeName){
+        HttpGet preDownloadGet = new HttpGet("http://rd.zhaopin.com/resumepreview/resume/_Download?" +
+                "extID=" + CvId + "&" +
+                "resumeVersion=1&" +
+                "language=1");
+        preDownloadGet.setHeader("Referer", "http://rd.zhaopin.com/resumepreview/resume/viewone/2/" + CvId + "_1_1?" +
+                "searchresume=1");
+        HttpResponse downloadRes = this.getResponse(preDownloadGet);
+        String preDownloadHtml = HttpUtils.getHtml(downloadRes);
+        Document doc = Jsoup.parse(preDownloadHtml);
+        preDownloadGet.releaseConnection();
+        String publicCollectionFolders = doc.select("#favorite option").first().attr("value");
+        System.out.println(publicCollectionFolders);
+        System.out.println(resumeName);
+        String url = "http://rd.zhaopin.com/resumepreview/resume/DownloadResume?" +
+                "r=0.24855911917984486&" +
+                "extID=" + CvId + "&" +
+                "versionNumber=1&" +
+                "favoriteID=" + publicCollectionFolders + "&" +
+                "resumeName=" + resumeName;
+        System.out.println(url);
+        HttpPost buyResumePost = new HttpPost(url);
+        buyResumePost.setHeader("Referer", "http://rd.zhaopin.com/resumepreview/resume/viewone/2/" +
+                CvId + "_1_1?searchresume=1");
+        while (true){
+            HttpResponse buyRes = this.getResponse(buyResumePost);
+            buyResumePost.releaseConnection();
+            if (buyRes.getEntity().getContentLength() == 37){
+                log.error("resume bought! " + CvId);
+                log.error(HttpUtils.getHtml(buyRes));
+                break;
+            }
+        }
+    }
+
+    public void getResumeWithKeyword(String keywordToSearch, String keywordToStore)
+            throws UnsupportedEncodingException {
         HttpGet getFirstPage = new HttpGet("http://rdsearch.zhaopin.com/Home/ResultForCustom?SF_1_1_1="
                 + URLEncoder.encode(keywordToSearch, "UTF-8") + "&orderBy=DATE_MODIFIED,1&SF_1_1_27=0&exclude=1");
         getFirstPage.setHeader("Referer", "http://rdsearch.zhaopin.com/home/SearchByCustom");
@@ -83,6 +181,7 @@ public class CrawlZhiLian {
             getFirstPage.releaseConnection();
             Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                     MongoConfig.collectionZhilianResume, rawResumeListPage1);
+            statisticAndSwitch(rawResumeListPage1.size());
             break;
         }
         getFirstPage.releaseConnection();
@@ -91,9 +190,49 @@ public class CrawlZhiLian {
                 List<RawResume> rawResumeList = getMoreResume(keywordToSearch, i, keywordToStore);
                 Helper.multiSaveToMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
                         MongoConfig.collectionZhilianResume, rawResumeList);
+                statisticAndSwitch(rawResumeList.size());
             }
         } catch (Exception e) {
             log.error("page " + page, e);
+        }
+    }
+
+    public void statisticAndSwitch(int growth){
+        this.count += growth;
+        log.info("count: " + this.count + ", switchCount: " + this.switchCount);
+        if (this.count > 1000){
+            this.count = 0;
+            this.switchCount++;
+            this.logout();
+            ArrayList<HashMap<String, String>> accounts = new ArrayList<>();
+            try {
+                File file = new File("zhilianAccounts.txt");
+                InputStreamReader read = new InputStreamReader(
+                        new FileInputStream(file));
+                BufferedReader bufferedReader = new BufferedReader(read);
+                String lineTxt = null;
+                while((lineTxt = bufferedReader.readLine()) != null){
+                    String[] ts = lineTxt.split(";");
+                    HashMap<String, String> account = new HashMap<>();
+                    account.put("account", ts[0]);
+                    account.put("password", ts[1]);
+                    accounts.add(account);
+                }
+                read.close();
+            }catch (Exception e){
+                log.error(e);
+            }
+            while (true){
+                int index = new Random().nextInt(accounts.size());
+                String accountName = accounts.get(index).get("account");
+                String password = accounts.get(index).get("password");
+                if (this.username.equals(accountName))
+                    continue;
+                this.username = accountName;
+                this.password = password;
+                break;
+            }
+            this.tryToLogin();
         }
     }
 
@@ -113,50 +252,57 @@ public class CrawlZhiLian {
         Elements resumes = doc.select(".info");
         List<RawResume> rawResumeList = new ArrayList<>();
         for (Element e : resumes) {
-            RawResume rawResume = new RawResume();
-            rawResume.setCvId(e.attr("tag"));
-            rawResume.setLink(e.select("a").attr("href"));
-            rawResume.setKeyword(keywordToStore);
-            if (Helper.isExistInMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
-                    MongoConfig.collectionZhilianResume, "CvId", e.attr("tag"))){
-                log.info("resume already exist in db, " + e.attr("tag"));
-                continue;
-            }
-            while (true) {
-                Document resumeDoc;
-                HttpGet getResumeHtml = new HttpGet(rawResume.getLink());
-//                log.warn("           get resume of " + rawResume.getLink());
-                HttpResponse response = this.getResponse(getResumeHtml);
-                String resumeHtml = HttpUtils.getHtml(response);
-                // 不加这一句就只能获取两个简历文本
-                getResumeHtml.releaseConnection();
-                resumeDoc = Jsoup.parse(resumeHtml);
-                if (resumeDoc.select("#resumeContentBody").first() != null) {
-                    rawResume.setRawHtml(resumeDoc.select("#resumeContentBody").first().html());
-                    break;
-                } else {
-                    if (resumeDoc.select("#resumeContentHead").first() != null) {
-                        log.warn("resume deleted " + rawResume.getCvId());
-                        break;
-                    }
-                    while (true) {
-//                        log.warn("!!!!!! code appears !!!!!!.");
-                        String code = getValidateCode("http://rd2.zhaopin.com/s/loginmgr/" +
-                                "monitorvalidatingcode.asp?t=" + System.currentTimeMillis() / 1000L);
+            RawResume rawResume = getRawResume(e, keywordToStore);
+            if (rawResume != null)
+                rawResumeList.add(rawResume);
+        }
+        return rawResumeList;
+    }
 
-                        HttpPost codePost = new HttpPost(ZhiLianConfig.CHECK_VALIDATING_CODE + code);
-                        HttpResponse codeResponse = this.getResponse(codePost);
-                        String result = Helper.getHtml(codeResponse);
-                        codePost.releaseConnection();
-                        if ("true".equals(result)) {
-                            break;
-                        }
+    public RawResume getRawResume(Element e, String keywordToStore){
+        RawResume rawResume = new RawResume();
+        rawResume.setCvId(e.attr("tag"));
+        rawResume.setLink(e.select("a").attr("href"));
+        rawResume.setKeyword(keywordToStore);
+        if (Helper.isExistInMongoDB(MyMongoClient.getMongoClient(), MongoConfig.dbNameZhilian,
+                MongoConfig.collectionZhilianResume, "CvId", e.attr("tag"))){
+            log.info("exist");
+            return null;
+        }
+        while (true) {
+            Document resumeDoc;
+            HttpGet getResumeHtml = new HttpGet(rawResume.getLink());
+//                log.warn("           get resume of " + rawResume.getLink());
+            HttpResponse response = this.getResponse(getResumeHtml);
+            String resumeHtml = HttpUtils.getHtml(response);
+            // 不加这一句就只能获取两个简历文本
+            getResumeHtml.releaseConnection();
+            resumeDoc = Jsoup.parse(resumeHtml);
+            if (resumeDoc.select("#resumeContentBody").first() != null) {
+                rawResume.setRawHtml(resumeDoc.select("#resumeContentBody").first().html());
+                return rawResume;
+//                break;
+            } else {
+                if (resumeDoc.select("#resumeContentHead").first() != null) {
+                    log.warn("resume deleted " + rawResume.getCvId());
+                    return null;
+//                    break;
+                }
+                while (true) {
+//                        log.warn("!!!!!! code appears !!!!!!.");
+                    String code = getValidateCode("http://rd2.zhaopin.com/s/loginmgr/" +
+                            "monitorvalidatingcode.asp?t=" + System.currentTimeMillis() / 1000L);
+
+                    HttpPost codePost = new HttpPost(ZhiLianConfig.CHECK_VALIDATING_CODE + code);
+                    HttpResponse codeResponse = this.getResponse(codePost);
+                    String result = Helper.getHtml(codeResponse);
+                    codePost.releaseConnection();
+                    if ("true".equals(result)) {
+                        break;
                     }
                 }
             }
-            rawResumeList.add(rawResume);
         }
-        return rawResumeList;
     }
 
     public void logout() {
@@ -170,12 +316,15 @@ public class CrawlZhiLian {
     public HttpResponse getResponse(HttpRequestBase requestBase) {
         while (true) {
             try {
+                Thread.sleep(1000 * this.sleepSeconds);
                 HttpResponse response = httpClient.execute(requestBase);
                 return response;
             } catch (ConnectTimeoutException e5) {
-                log.error("ConnectTimeoutException in validate code");
+                log.error("ConnectTimeoutException in getResponse");
                 this.logout();
                 this.tryToLogin();
+            } catch (InterruptedException ite) {
+                log.error(ite);
             } catch (IOException ioe) {
                 log.error(ioe);
             }
@@ -195,8 +344,8 @@ public class CrawlZhiLian {
             httppost.setHeader("Host", "rd2.zhaopin.com");
 
             List<NameValuePair> params = new ArrayList<>(2);
-            params.add(new BasicNameValuePair("username", "jiri59483132"));
-            params.add(new BasicNameValuePair("password", "linxiaohua87860519"));
+            params.add(new BasicNameValuePair("username", username));
+            params.add(new BasicNameValuePair("password", password));
 
             // validate
             String validate = getValidateCode(ZhiLianConfig.PICTURE_TIME_STAMP + System.currentTimeMillis() / 1000L);
@@ -225,7 +374,7 @@ public class CrawlZhiLian {
 //                log.warn("not 200, go on");
                 continue;
             }
-            log.warn("successfully login!");
+            log.warn("successfully login with " + this.username);
             return;
         }
     }
