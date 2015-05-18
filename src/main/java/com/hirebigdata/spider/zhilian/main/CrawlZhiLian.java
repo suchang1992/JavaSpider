@@ -44,7 +44,8 @@ public class CrawlZhiLian {
     static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger("zhilian");
     String username = "";
     String password = "";
-    int sleepSeconds = 0;
+    float sleepSeconds = 0;
+    int serialDeletedResumeCount = 0;
     int switchCount = 0;
     int count = 0;
 
@@ -65,7 +66,7 @@ public class CrawlZhiLian {
     public static void main(String[] args) throws Exception {
         if (args.length == 0){
             // sleep 10 seconds at each request will just used all 4W chance to check resume
-            CrawlZhiLian.getResumeByKeyword("qzw59483132q", "shuzhilian82140078", "keywords2.xls", 2);
+            CrawlZhiLian.getResumeByKeyword("qzw59483132q", "shuzhilian82140078", "keywords2.xls", 1.5f);
         }
         else
             CrawlZhiLian.getResumeByKeyword(args[0], args[1], args[2], Integer.parseInt(args[3]));
@@ -77,7 +78,7 @@ public class CrawlZhiLian {
 //        CrawlZhiLian.getResumeByCvId("", "jiri59483132", "linxiaohua87860519");
     }
 
-    public static void getResumeByKeyword(String username, String password, String keywordFile, int sleepSeconds){
+    public static void getResumeByKeyword(String username, String password, String keywordFile, float sleepSeconds){
         CrawlZhiLian zhiLian = new CrawlZhiLian(username, password);
         if (sleepSeconds != 0)
             zhiLian.sleepSeconds = sleepSeconds;
@@ -279,12 +280,18 @@ public class CrawlZhiLian {
             getResumeHtml.releaseConnection();
             resumeDoc = Jsoup.parse(resumeHtml);
             if (resumeDoc.select("#resumeContentBody").first() != null) {
+                serialDeletedResumeCount = 0;
                 rawResume.setRawHtml(resumeDoc.select("#resumeContentBody").first().html());
                 return rawResume;
 //                break;
             } else {
                 if (resumeDoc.select("#resumeContentHead").first() != null) {
+                    serialDeletedResumeCount++;
                     log.warn("resume deleted " + rawResume.getCvId());
+                    if (serialDeletedResumeCount > 10){
+                        log.error("RESUME REACHED LIMITED NUMBER!");
+                        System.exit(0);
+                    }
                     return null;
 //                    break;
                 }
@@ -316,7 +323,7 @@ public class CrawlZhiLian {
     public HttpResponse getResponse(HttpRequestBase requestBase) {
         while (true) {
             try {
-                Thread.sleep(1000 * this.sleepSeconds);
+                Thread.sleep((long)(1000 * this.sleepSeconds));
                 HttpResponse response = httpClient.execute(requestBase);
                 return response;
             } catch (ConnectTimeoutException e5) {
@@ -413,8 +420,8 @@ public class CrawlZhiLian {
                 // 因为ImagePreProcess3的main函数是直接将结果打印了出来，
                 // 所以这里我对console的输出做了重定向，打印到文件中，
                 // 然后从文件中读取结果
-                String arg = f.getAbsolutePath() + " c:\\train";
-                File f2 = new File("c:\\output1.txt");
+                String arg = f.getAbsolutePath() + " ./train/";
+                File f2 = new File("output1.txt");
                 PrintStream out = new PrintStream(new FileOutputStream(f2));
                 PrintStream old_out = System.out;
                 System.setOut(out);
