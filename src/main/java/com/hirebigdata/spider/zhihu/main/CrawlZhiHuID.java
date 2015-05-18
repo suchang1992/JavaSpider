@@ -24,29 +24,46 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Administrator on 2015/5/11.
  */
-public class CrawlZhiHuID {
+public class CrawlZhiHuID implements Runnable{
 
-    InputStreamReader inputStreamReader;
+    static InputStreamReader inputStreamReader;
+    String keyword = "";
 
-    public CrawlZhiHuID(){
+    static {
         inputStreamReader = readUidInputStream();
     }
 
+    CrawlZhiHuID(String keyword){
+        this.keyword = keyword;
+    }
+
     public static void main(String[] args) {
-        CrawlZhiHuID crawlZhiHuID = new CrawlZhiHuID();
-        crawlZhiHuID.crawlManager();
+        String keyword = getkeyword();
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        for (int i=keyword.length()-1; i>0; i--){
+            System.out.println(keyword.charAt(i));
+            executorService.execute(new CrawlZhiHuID(String.valueOf(keyword.charAt(i))));
+        }
+        executorService.shutdown();
+    }
+
+    public void run(){
+//        CrawlZhiHuID crawlZhiHuID = new CrawlZhiHuID();
+        this.crawlManager();
     }
 
     public void crawlManager() {
         GetCookies zhihu = new GetCookies();
         String cookie = zhihu.login();
         while (true) {
-            String keyword = getkeyword();
+
             int offset = 10;
             String url = "http://www.zhihu.com/r/search?q=" + keyword + "&type=people&offset=";
             System.out.println("访问："+keyword+" offset："+offset);
@@ -63,11 +80,10 @@ public class CrawlZhiHuID {
                 }
             }
         }
-
     }
 
-    public String getkeyword(){
-        char[] buf =new char[1];
+    public static String getkeyword(){
+        char[] buf =new char[1024 * 3];
         try {
             inputStreamReader.read(buf);
         } catch (IOException e) {
@@ -89,8 +105,8 @@ public class CrawlZhiHuID {
         return string;
     }
 
-    public InputStreamReader readUidInputStream(){
-        File file = new File("F:/key.txt");
+    public static InputStreamReader readUidInputStream(){
+        File file = new File("D:/key.txt");
         InputStreamReader reader = null;
         try {
             reader = new InputStreamReader(
