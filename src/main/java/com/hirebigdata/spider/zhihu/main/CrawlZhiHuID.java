@@ -106,7 +106,7 @@ public class CrawlZhiHuID implements Runnable{
     }
 
     public static InputStreamReader readUidInputStream(){
-        File file = new File("D:/key.txt");
+        File file = new File("key.txt");
         InputStreamReader reader = null;
         try {
             reader = new InputStreamReader(
