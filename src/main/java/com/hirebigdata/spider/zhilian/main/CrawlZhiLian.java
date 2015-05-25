@@ -420,7 +420,7 @@ public class CrawlZhiLian {
                 // 因为ImagePreProcess3的main函数是直接将结果打印了出来，
                 // 所以这里我对console的输出做了重定向，打印到文件中，
                 // 然后从文件中读取结果
-                String arg = f.getAbsolutePath() + " ./train/";
+                String arg = f.getAbsolutePath() + " c://train/";
                 File f2 = new File("output1.txt");
                 PrintStream out = new PrintStream(new FileOutputStream(f2));
                 PrintStream old_out = System.out;
