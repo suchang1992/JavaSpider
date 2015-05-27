@@ -46,8 +46,9 @@ public class CrawlZhiHuID implements Runnable{
 
     public static void main(String[] args) {
         String keyword = getkeyword();
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        ExecutorService executorService = Executors.newFixedThreadPool(110);
         for (int i=keyword.length()-1; i>0; i--){
+            System.out.print(i);
             System.out.println(keyword.charAt(i));
             executorService.execute(new CrawlZhiHuID(String.valueOf(keyword.charAt(i))));
         }
@@ -66,14 +67,14 @@ public class CrawlZhiHuID implements Runnable{
 
             int offset = 10;
             String url = "http://www.zhihu.com/r/search?q=" + keyword + "&type=people&offset=";
-            System.out.println("访问："+keyword+" offset："+offset);
+            System.out.println("access："+keyword+" offset："+offset);
             String nextUrl = getDataID(url + offset, cookie);
             while (nextUrl != null) {
                 offset += 10;
-                System.out.println("访问："+keyword+" offset："+offset);
+                System.out.println("access："+keyword+" offset："+offset);
                 nextUrl = getDataID("http://www.zhihu.com"+nextUrl, cookie);
                 try {
-                    System.out.println("休眠1秒");
+                    System.out.println("sleep one second");
                     TimeUnit.MILLISECONDS.sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
