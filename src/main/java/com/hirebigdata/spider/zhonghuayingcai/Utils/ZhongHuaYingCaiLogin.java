@@ -38,29 +38,94 @@ public class ZhongHuaYingCaiLogin {
 	String jobName = "测试工程师004";
 	
 	public static void main(String arg[]) throws Exception {
-		ZhongHuaYingCaiLogin zhongHuaYingCai = new ZhongHuaYingCaiLogin();
-		zhongHuaYingCai.login("vipcdylf","longhu123");
-		zhongHuaYingCai.loginRedirect();
-		String s = zhongHuaYingCai.doGet("http://www.chinahr.com/modules/hmresume/?c=searchx&new=searchx&src=index",zhongHuaYingCai.headerString);
+//        String[] val = {/* oldWorkPlace */ "27,312",/* oldJobName */ "",/* oldClassify */ "",/* company_id */ "",
+//        /* comName */ "",/* jobId */ "",/* jobName */ "全栈工程师",/* workPlace */ "27,312",
+//        /* jobType */ "1001,1004,1053;1001,1004,1056;1001,1004,1059",/* endTime */ "2015-07-28",
+//        /* depmId */ "33dcae848afdd6531da23327j",/* number */ "",/* workType */ "1",
+//        /* jobDesc */ "岗位职责：全栈工程师",/* degId */ "5",/* degAbove */ "1",/* minAge */ "",/* maxAge */ "",
+//        /* gender */ "N",/* expId */ "3",/* expAbove */ "1",/* driverSkill */ "0",
+//        /* langSkills[typeId][] */ "0",
+//        /* langSkills[langId][] */ "0",
+//        /* langSkills[levelId][] */ "0",/* condition */ "",/* minSalary */ "3333",/* maxSalary */ "4444",
+//        /* isNegotiate */ "0",/* benefits */ "包住宿",/* upComContact */ "0",/* contact */ "肖琴",
+//        /* jobEmail[] */ "hr@cdecube.com",/* email[] */ "resume_test@qq.com",/* mobile[] */ "",
+//        /* phoneArea[] */ "028",/* phoneNo[] */ "61837805",/* phoneExt[] */ "",/* faxArea[] */ "",
+//        /* faxNo[] */ "",/* faxExt[] */ "",/* ivAddr */ "成都市高新西区合作路89号龙湖时代天街19栋0914",
+//        /* zipCode */ "",/* markerId */ "",/* markerLat */ "",/* markerLng */ "",/* markerDetail */ "",/* cal */ "",
+//        /* isAutoRep */ "0",/* isSendApp */ "0",/* isSendCS */ "0",/* isSendSys */ "0",/* appEmail[] */ "",
+//        /* csEmail[] */ "",/* sysEmail[] */ "",/* insertJobPoints */ "1",/* classify */ "1"};
+//        String[] values2 = {"27,312", "", "", "", "", "", "全栈工程师2", "27,312",
+//                "1001,1004,1053;1001,1004,1056;1001,1004,1059", "2015-07-28",
+//                "33dcae848afdd6531da23327j", "", "1",
+//                "岗位职责：全栈工程师",
+//                "5", "1", "", "", "N", "3", "1", "0", "0", "0", "0", "", "3333", "4444", "0",
+//                "包住宿", "0", "肖琴", "hr@cdecube.com", "resume_test@qq.com",
+//                "", "028", "61837805", "", "", "", "",
+//                "成都市高新西区合作路89号龙湖时代天街19栋0914",
+//                "", "", "", "", "", "", "0", "0", "0", "0", "", "", "", "1", "1"};
+//        ZhongHuaYingCaiLogin.publishNewJob("vipcdylf","longhu123", values2);
+        if (arg.length == 0 || arg.length < 59){
+            System.out.println("Test usage: java -jar yingcai-newJob.jar username password values");
+            System.out.println("String[] values, length = 57");
+        }else{
+            String[] temp = new String[40];
+            for(int i=0; i<arg.length; i++){
+                if(i<2)
+                    continue;
+                temp[i - 2] = arg[i];
+            }
+            ZhongHuaYingCaiLogin.publishNewJob(arg[0],arg[1], temp);
+        }
+//		ZhongHuaYingCaiLogin zhongHuaYingCai = new ZhongHuaYingCaiLogin();
+//		zhongHuaYingCai.login("vipcdylf","longhu123");
+//		zhongHuaYingCai.loginRedirect();
+//		String s = zhongHuaYingCai.doGet("http://www.chinahr.com/modules/hmresume/?c=searchx&new=searchx&src=index",zhongHuaYingCai.headerString);
+////		System.out.println(s);
+//		HashMap<String, String> formData = new HashMap<>();
+//		formData.put("flag","1");
+//		formData.put("keywordSelect1","0");
+//		formData.put("fuzzyWishPlace", "1");
+//		formData.put("allKeyword", "1");
+//		formData.put("matchLevel", "1,2");
+//		formData.put("searcherCount", "0");
+//		formData.put("used", "0");
+//		formData.put("allKeyword2", "0");
+//		formData.put("keyword", "java ios");
+//		formData.put("keywordSelect", "0");
+//		formData.put("page", "1");
+//		s = zhongHuaYingCai.doPost("http://www.chinahr.com/modules/jmw/SocketAjax.php?m=hmresume&f=resume&action=myresume&list_type=search&usetoken=1",formData,zhongHuaYingCai.headerString);
 //		System.out.println(s);
-		HashMap<String, String> formData = new HashMap<>();
-		formData.put("flag","1");
-		formData.put("keywordSelect1","0");
-		formData.put("fuzzyWishPlace", "1");
-		formData.put("allKeyword", "1");
-		formData.put("matchLevel", "1,2");
-		formData.put("searcherCount", "0");
-		formData.put("used", "0");
-		formData.put("allKeyword2", "0");
-		formData.put("keyword", "java ios");
-		formData.put("keywordSelect", "0");
-		formData.put("page", "1");
-		s = zhongHuaYingCai.doPost("http://www.chinahr.com/modules/jmw/SocketAjax.php?m=hmresume&f=resume&action=myresume&list_type=search&usetoken=1",formData,zhongHuaYingCai.headerString);
-		System.out.println(s);
-		JSONObject jsonObject = JSON.parseObject(s);
-		zhongHuaYingCai.logout();
+//		JSONObject jsonObject = JSON.parseObject(s);
+//		zhongHuaYingCai.logout();
 //		System.exit(0);
 	}
+
+    public static boolean publishNewJob(String username, String password, String[] values) throws Exception{
+        ZhongHuaYingCaiLogin zhongHuaYingCai = new ZhongHuaYingCaiLogin();
+        zhongHuaYingCai.login(username,password);
+        zhongHuaYingCai.loginRedirect();
+        HttpPost postNewJob = new HttpPost("http://www.chinahr.com/modules/hmrecruit/index.php?c=managejob&m=insert_hrm&noblock=1");
+        List<NameValuePair> params = new ArrayList<>(2);
+        String[] keys = {"oldWorkPlace", "oldJobName", "oldClassify", "company_id", "comName", "jobId", "jobName",
+                "workPlace", "jobType", "endTime", "depmId", "number", "workType", "jobDesc", "degId", "degAbove",
+                "minAge", "maxAge", "gender", "expId", "expAbove", "driverSkill",
+                "langSkills[typeId][]", "langSkills[langId][]", "langSkills[levelId][]", "condition", "minSalary",
+                "maxSalary", "isNegotiate", "benefits", "upComContact", "contact", "jobEmail[]", "email[]", "mobile[]",
+                "phoneArea[]", "phoneNo[]", "phoneExt[]", "faxArea[]", "faxNo[]", "faxExt[]", "ivAddr", "zipCode",
+                "markerId", "markerLat", "markerLng", "markerDetail", "cal", "isAutoRep", "isSendApp", "isSendCS",
+                "isSendSys", "appEmail[]", "csEmail[]", "sysEmail[]", "insertJobPoints", "classify"};
+        for(int i=0; i< keys.length; i++){
+            params.add(new BasicNameValuePair(keys[i], values[i]));
+        }
+        try {
+            postNewJob.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+        } catch (UnsupportedEncodingException ue) {
+            ue.printStackTrace();
+        }
+        HttpResponse postResponse = zhongHuaYingCai.httpclient.execute(postNewJob);
+        System.out.println(postResponse.toString());
+        return true;
+    }
 	
 	public void logout() throws ClientProtocolException, IOException{
 		HttpGet httpLogout = new HttpGet(LOGOUT);
