@@ -38,7 +38,7 @@ public class ZhongHuaYingCaiLogin {
 	String jobName = "测试工程师004";
 	
 	public static void main(String arg[]) throws Exception {
-//        String[] val = {/* oldWorkPlace */ "27,312",/* oldJobName */ "",/* oldClassify */ "",/* company_id */ "",
+//        String[] values = {/* oldWorkPlace */ "27,312",/* oldJobName */ "",/* oldClassify */ "",/* company_id */ "",
 //        /* comName */ "",/* jobId */ "",/* jobName */ "全栈工程师",/* workPlace */ "27,312",
 //        /* jobType */ "1001,1004,1053;1001,1004,1056;1001,1004,1059",/* endTime */ "2015-07-28",
 //        /* depmId */ "33dcae848afdd6531da23327j",/* number */ "",/* workType */ "1",
@@ -54,21 +54,12 @@ public class ZhongHuaYingCaiLogin {
 //        /* zipCode */ "",/* markerId */ "",/* markerLat */ "",/* markerLng */ "",/* markerDetail */ "",/* cal */ "",
 //        /* isAutoRep */ "0",/* isSendApp */ "0",/* isSendCS */ "0",/* isSendSys */ "0",/* appEmail[] */ "",
 //        /* csEmail[] */ "",/* sysEmail[] */ "",/* insertJobPoints */ "1",/* classify */ "1"};
-//        String[] values2 = {"27,312", "", "", "", "", "", "全栈工程师2", "27,312",
-//                "1001,1004,1053;1001,1004,1056;1001,1004,1059", "2015-07-28",
-//                "33dcae848afdd6531da23327j", "", "1",
-//                "岗位职责：全栈工程师",
-//                "5", "1", "", "", "N", "3", "1", "0", "0", "0", "0", "", "3333", "4444", "0",
-//                "包住宿", "0", "肖琴", "hr@cdecube.com", "resume_test@qq.com",
-//                "", "028", "61837805", "", "", "", "",
-//                "成都市高新西区合作路89号龙湖时代天街19栋0914",
-//                "", "", "", "", "", "", "0", "0", "0", "0", "", "", "", "1", "1"};
-//        ZhongHuaYingCaiLogin.publishNewJob("vipcdylf","longhu123", values2);
+//        ZhongHuaYingCaiLogin.publishNewJob("vipcdylf","longhu123", values);
         if (arg.length == 0 || arg.length < 59){
             System.out.println("Test usage: java -jar yingcai-newJob.jar username password values");
             System.out.println("String[] values, length = 57");
         }else{
-            String[] temp = new String[40];
+            String[] temp = new String[57];
             for(int i=0; i<arg.length; i++){
                 if(i<2)
                     continue;
